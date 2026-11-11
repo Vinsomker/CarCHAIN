@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inspector Dashboard – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style>
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: var(--space-md) 0;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+    }
+    .status-select {
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .result-radio-group {
+      display: flex;
+      gap: var(--space-sm);
+      margin: var(--space-xs) 0 var(--space-md);
+    }
+    .result-radio-btn {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--color-border);
+      background: var(--color-bg-tertiary);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+    .result-radio-btn.pass.active   { border-color: var(--color-success); background: var(--color-success-bg); color: var(--color-success); }
+    .result-radio-btn.cond.active   { border-color: var(--color-warning); background: var(--color-warning-bg); color: var(--color-warning); }
+    .result-radio-btn.fail.active   { border-color: var(--color-danger);  background: var(--color-danger-bg);  color: var(--color-danger); }
+    @media (max-width: 680px) {
+      .checklist-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div style="display:flex;align-items:center;gap:var(--space-md);">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <a href="../index.html" class="navbar-brand">
+        <div class="brand-icon">⛓</div>
+        Car<span class="brand-chain">Chain</span>
+        <span class="badge badge-warning" style="margin-left:4px; font-size:0.65rem;">Inspector</span>
+      </a>
+    </div>
+    <div class="navbar-actions">
+      <a href="marketplace.html" class="btn btn-secondary btn-sm">Marketplace</a>
+      <button onclick="logout()" class="btn btn-primary btn-sm">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Dashboard Layout ───────────────────────────────────────────────────── -->
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboard-sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar" style="background:#d97706">I</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Inspector</div>
+        <div class="sidebar-user-role" id="sidebar-agency">Technical Inspection</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Inspection Portal</span>
+      <a href="#overview" class="sidebar-link active" onclick="showTab('overview')">
+        <span class="sidebar-link-icon">🏠</span> Overview
+      </a>
+      <a href="#certificates" class="sidebar-link" onclick="showTab('certificates')">
+        <span class="sidebar-link-icon">📋</span> Issued Certificates
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" onclick="openInspectionModal()">
+        <span class="sidebar-link-icon">➕</span> Conduct Inspection
+      </a>
+      <a href="marketplace.html" class="sidebar-link">
+        <span class="sidebar-link-icon">🚗</span> Browse Marketplace
+      </a>
+      <a href="#profile" class="sidebar-link" onclick="showTab('profile')">
+        <span class="sidebar-link-icon">👤</span> Inspector Credentials
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="btn btn-secondary btn-sm btn-full">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="dashboard-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Inspector Dashboard</h1>
+          <p>Issue technical inspection certificates &amp; verify vehicle roadworthiness on CarChain</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary btn-sm" id="btn-new-inspection" onclick="openInspectionModal()">+ Issue Technical Certificate</button>
+        </div>
+      </div>
+
+      <!-- Pending Approval Alert -->
+      <div id="approval-notice" style="display:none" class="alert alert-warning">
+        ⏳ <strong>Account Pending Review:</strong> Your inspector account is awaiting administrator approval.
+        Once approved, you will be authorized to issue verified technical inspection certificates on CarChain.
+      </div>
+
+      <!-- Approved Banner -->
+      <div id="approved-banner" style="display:none" class="alert alert-success">
+        ✅ <strong>Certified Vehicle Inspector:</strong> Your license is active. You are authorized to issue certified inspection reports.
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Certificates Issued</span>
+            <div class="stat-card-icon blue">📋</div>
+          </div>
+          <div class="stat-card-value" id="stat-total-certs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Vehicles Passed</span>
+            <div class="stat-card-icon green">✅</div>
+          </div>
+          <div class="stat-card-value" id="stat-passed-certs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Vehicles Failed</span>
+            <div class="stat-card-icon red">❌</div>
+          </div>
+          <div class="stat-card-value" id="stat-failed-certs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Inspector Status</span>
+            <div class="stat-card-icon yellow">🛡️</div>
+          </div>
+          <div class="stat-card-value" id="stat-status" style="font-size:1.15rem; margin-top:6px">—</div>
+        </div>
+      </div>
+
+      <!-- Certificates Table -->
+      <div class="data-table-wrapper" id="certificates">
+        <div class="data-table-header">
+          <h3 class="data-table-title">Issued Inspection Certificates</h3>
+          <button class="btn btn-primary btn-sm" onclick="openInspectionModal()">+ New Certificate</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Certificate #</th>
+                <th>Vehicle / VIN</th>
+                <th>Type</th>
+                <th>Result</th>
+                <th>Odometer Reading</th>
+                <th>Inspection Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="certs-table-body">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">Loading inspection certificates...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div class="card" style="margin-top:var(--space-xl)" id="profile">
+        <h3 style="margin-bottom:var(--space-lg)">Inspector Credentials</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Inspector Name</div>
+            <div class="info-value" id="profile-name">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Agency / Inspection Station</div>
+            <div class="info-value" id="profile-agency">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Accreditation License</div>
+            <div class="info-value" id="profile-license">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value" id="profile-email">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Approval Status</div>
+            <div class="info-value" id="profile-status">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ── Modal: Conduct Inspection & Issue Certificate ─────────────────────── -->
+<div id="inspection-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; overflow-y:auto; padding:var(--space-md)">
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)" onclick="closeInspectionModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:740px;max-height:92vh;overflow-y:auto;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg)">
+      <h3 style="display:flex;align-items:center;gap:8px">🛡️ Issue Technical Inspection Certificate</h3>
+      <button onclick="closeInspectionModal()" style="background:none;border:none;font-size:1.3rem;color:var(--color-text-muted);cursor:pointer">✕</button>
+    </div>
+
+    <form id="inspection-form" onsubmit="handleCreateInspection(event)">
+      <!-- VIN lookup -->
+      <div class="form-group">
+        <label class="form-label">Vehicle Identification Number (VIN) <span class="required">*</span></label>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="i-vin-input" class="form-control" placeholder="Enter 17-char VIN" maxlength="17" required style="font-family:var(--font-mono); text-transform:uppercase" />
+          <button type="button" onclick="lookupVehicleForInspection()" class="btn btn-secondary btn-sm" style="flex-shrink:0">🔍 Verify VIN</button>
+        </div>
+        <div id="i-vehicle-preview" style="display:none; margin-top:8px; padding:10px 14px; background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-md); font-size:0.875rem"></div>
+        <input type="hidden" name="vehicleId" id="i-vehicle-id" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Inspection Type <span class="required">*</span></label>
+          <select name="inspectionType" class="form-control" required>
+            <option value="annual">Annual Roadworthiness Test</option>
+            <option value="pre_sale">Pre-Purchase Marketplace Certification</option>
+            <option value="post_accident">Post-Collision Structural Assessment</option>
+            <option value="import">Import Technical Compliance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Odometer Reading (km) <span class="required">*</span></label>
+          <input type="number" name="mileageAtInspection" id="i-mileage-input" class="form-control" placeholder="Verified km" min="0" required />
+          <div class="form-hint" id="i-mileage-hint" style="color:var(--color-text-muted)">Must be &gt;= last certified odometer.</div>
+        </div>
+      </div>
+
+      <!-- Overall Result -->
+      <div class="form-group">
+        <label class="form-label">Overall Technical Result <span class="required">*</span></label>
+        <input type="hidden" name="result" id="i-result-input" value="pass" />
+        <div class="result-radio-group">
+          <div class="result-radio-btn pass active" onclick="setInspectionResult('pass', this)">✅ PASS</div>
+          <div class="result-radio-btn cond" onclick="setInspectionResult('conditional_pass', this)">⚠️ CONDITIONAL PASS</div>
+          <div class="result-radio-btn fail" onclick="setInspectionResult('fail', this)">❌ FAIL</div>
+        </div>
+      </div>
+
+      <!-- 12-Point Inspection Checklist -->
+      <div class="form-group">
+        <label class="form-label">12-Point Technical Safety Checklist</label>
+        <div class="checklist-grid" id="checklist-container">
+          <!-- 12 technical categories -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Inspector Technical Assessment / Notes</label>
+        <textarea name="comments" class="form-control" rows="3" placeholder="Summary of safety condition, brake lining percentages, tire tread depth, chassis observations..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Required Repairs (if conditional/failed)</label>
+        <input type="text" name="requiredRepairs" class="form-control" placeholder="e.g. Replace rear brake pads, adjust steering alignment" />
+      </div>
+
+      <div style="display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-lg)">
+        <button type="button" onclick="closeInspectionModal()" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-cert">Issue &amp; Certify on Passport</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let myCertificates = [];
+  let selectedVehicleCurrentMileage = 0;
+
+  const CHECKLIST_ITEMS = [
+    { key: 'engine', label: 'Engine & Powertrain' },
+    { key: 'transmission', label: 'Transmission & Driveline' },
+    { key: 'brakes', label: 'Braking System & ABS' },
+    { key: 'suspension', label: 'Suspension & Shocks' },
+    { key: 'steering', label: 'Steering Assembly' },
+    { key: 'tires', label: 'Tires & Wheel Alignment' },
+    { key: 'lights', label: 'Headlights & Signaling' },
+    { key: 'electrical', label: 'Electrical & Battery' },
+    { key: 'bodywork', label: 'Structural Chassis & Frame' },
+    { key: 'interior', label: 'Safety Belts & Airbags' },
+    { key: 'undercarriage', label: 'Undercarriage & Exhaust' },
+    { key: 'emissions', label: 'Emissions Compliance' },
+  ];
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!requireAuth(['inspector', 'admin'])) return;
+
+    const user = CarChainAPI.SessionManager.getUser();
+    if (user) {
+      document.getElementById('sidebar-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('sidebar-avatar').textContent = getInitials(user.firstName, user.lastName);
+      document.getElementById('sidebar-agency').textContent = user.businessName || 'Certified Inspector';
+      document.getElementById('profile-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('profile-agency').textContent = user.businessName || 'Independent';
+      document.getElementById('profile-license').textContent = user.businessLicense || 'Accredited Technical Agency';
+      document.getElementById('profile-email').textContent = user.email;
+
+      const isApproved = user.approvalStatus === 'approved';
+      document.getElementById('stat-status').innerHTML = getStatusBadge(user.approvalStatus || 'pending');
+      document.getElementById('profile-status').innerHTML = getStatusBadge(user.approvalStatus || 'pending');
+
+      if (isApproved) {
+        document.getElementById('approved-banner').style.display = 'flex';
+      } else {
+        document.getElementById('approval-notice').style.display = 'flex';
+        document.getElementById('btn-new-inspection').disabled = true;
+      }
+    }
+
+    renderChecklistInputs();
+    await refreshDashboard();
+  });
+
+  function renderChecklistInputs() {
+    const container = document.getElementById('checklist-container');
+    container.innerHTML = CHECKLIST_ITEMS.map(item => `
+      <div class="checklist-item">
+        <span>${item.label}</span>
+        <select class="status-select" id="check-${item.key}">
+          <option value="ok" selected>✅ OK</option>
+          <option value="warning">⚠️ Warning</option>
+          <option value="fail">❌ Fail</option>
+        </select>
+      </div>
+    `).join('');
+  }
+
+  function setInspectionResult(res, el) {
+    document.querySelectorAll('.result-radio-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('i-result-input').value = res;
+  }
+
+  async function refreshDashboard() {
+    try {
+      const response = await CarChainAPI.Inspections.getMyInspections();
+      myCertificates = response.certificates || [];
+
+      const totalCerts = myCertificates.length;
+      const passedCerts = myCertificates.filter(c => c.result === 'pass').length;
+      const failedCerts = myCertificates.filter(c => c.result === 'fail').length;
+
+      document.getElementById('stat-total-certs').textContent = totalCerts;
+      document.getElementById('stat-passed-certs').textContent = passedCerts;
+      document.getElementById('stat-failed-certs').textContent = failedCerts;
+
+      renderCertsTable(myCertificates);
+    } catch (err) {
+      Toast.error('Failed to load inspection records: ' + err.message);
+    }
+  }
+
+  function renderCertsTable(certs) {
+    const tbody = document.getElementById('certs-table-body');
+    if (!certs || certs.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="table-empty">
+            <div class="table-empty-icon">📋</div>
+            <p>No inspection certificates issued yet.</p>
+            <button onclick="openInspectionModal()" class="btn btn-primary btn-sm" style="margin-top:var(--space-md)">+ Issue Your First Certificate</button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = certs.map(c => {
+      const v = c.vehicle;
+      const name = v ? `${v.year} ${v.make} ${v.model}` : 'Unknown Vehicle';
+      const vin = v?.vin || '—';
+
+      return `
+        <tr>
+          <td>
+            <strong style="font-family:var(--font-mono); color:var(--color-accent)">${c.certificateNumber}</strong>
+          </td>
+          <td>
+            <strong>${name}</strong>
+            <div class="text-xs text-muted" style="font-family:var(--font-mono)">${vin}</div>
+          </td>
+          <td><span class="text-xs" style="text-transform:uppercase">${c.inspectionType}</span></td>
+          <td>${getStatusBadge(c.result)}</td>
+          <td>${c.mileageAtInspection.toLocaleString()} km</td>
+          <td class="text-muted">${formatDate(c.inspectionDate)}</td>
+          <td>
+            ${v ? `<a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">🛡️ Passport</a>` : '—'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openInspectionModal() {
+    const user = CarChainAPI.SessionManager.getUser();
+    if (user.approvalStatus !== 'approved' && user.role !== 'admin') {
+      Toast.error('Your inspector account is pending approval before you can issue certificates.');
+      return;
+    }
+    document.getElementById('inspection-form').reset();
+    document.getElementById('i-vehicle-preview').style.display = 'none';
+    document.getElementById('i-vehicle-id').value = '';
+    selectedVehicleCurrentMileage = 0;
+    renderChecklistInputs();
+    document.getElementById('inspection-modal').style.display = 'flex';
+  }
+
+  function closeInspectionModal() {
+    document.getElementById('inspection-modal').style.display = 'none';
+  }
+
+  async function lookupVehicleForInspection() {
+    const vin = document.getElementById('i-vin-input').value.trim().toUpperCase();
+    if (!vin || vin.length !== 17) {
+      Toast.error('Please enter a valid 17-character VIN.');
+      return;
+    }
+
+    try {
+      const response = await CarChainAPI.Vehicles.getByVin(vin);
+      const vehicle = response.passport.vehicle;
+
+      document.getElementById('i-vehicle-id').value = vehicle._id;
+      selectedVehicleCurrentMileage = vehicle.currentMileage;
+
+      const previewEl = document.getElementById('i-vehicle-preview');
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = `
+        <div style="color:var(--color-success); font-weight:700">✅ Vehicle Found on CarChain</div>
+        <div style="margin-top:2px"><strong>${vehicle.year} ${vehicle.make} ${vehicle.model}</strong> (${vehicle.bodyType.toUpperCase()})</div>
+        <div style="color:var(--color-text-muted); font-size:0.8rem; margin-top:2px">
+          Current recorded odometer: <strong style="color:var(--color-text-primary)">${vehicle.currentMileage.toLocaleString()} ${vehicle.mileageUnit}</strong>
+        </div>
+      `;
+
+      document.getElementById('i-mileage-input').min = vehicle.currentMileage;
+      document.getElementById('i-mileage-input').placeholder = `Min: ${vehicle.currentMileage}`;
+      document.getElementById('i-mileage-hint').innerHTML = `Last recorded odometer: <strong>${vehicle.currentMileage.toLocaleString()} km</strong>. Cannot enter lower!`;
+
+      Toast.success('Vehicle verified for technical inspection.');
+    } catch (err) {
+      document.getElementById('i-vehicle-preview').style.display = 'none';
+      document.getElementById('i-vehicle-id').value = '';
+      Toast.error('Vehicle lookup failed: ' + err.message);
+    }
+  }
+
+  async function handleCreateInspection(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('btn-submit-cert');
+
+    const vehicleId = document.getElementById('i-vehicle-id').value;
+    if (!vehicleId) {
+      Toast.error('Please verify the vehicle VIN first.');
+      return;
+    }
+
+    const data = FormHelper.serialize(form);
+    const mileage = Number(data.mileageAtInspection);
+
+    if (mileage < selectedVehicleCurrentMileage) {
+      Toast.error(`Fraud prevention: Mileage (${mileage.toLocaleString()}) cannot be lower than last certified reading (${selectedVehicleCurrentMileage.toLocaleString()}).`);
+      return;
+    }
+
+    ButtonHelper.setLoading(btn, true);
+
+    // Build checklist map
+    const checklist = {};
+    CHECKLIST_ITEMS.forEach(item => {
+      const val = document.getElementById(`check-${item.key}`)?.value || 'ok';
+      checklist[item.key] = { status: val };
+    });
+
+    const payload = {
+      vehicleId,
+      inspectionType: data.inspectionType,
+      mileageAtInspection: mileage,
+      result: document.getElementById('i-result-input').value || 'pass',
+      checklist,
+      comments: data.comments,
+      requiredRepairs: data.requiredRepairs ? [data.requiredRepairs] : [],
+    };
+
+    try {
+      const response = await CarChainAPI.Inspections.create(payload);
+      Toast.success(`Certificate ${response.certificate.certificateNumber} generated & added to passport!`);
+      closeInspectionModal();
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error('Certificate generation failed: ' + err.message);
+    } finally {
+      ButtonHelper.setLoading(btn, false, 'Issue & Certify on Passport');
+    }
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    event.currentTarget?.classList.add('active');
+  }
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+  });
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    document.getElementById('dashboard-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+</script>
+</body>
+</html>

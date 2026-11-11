@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicle Details – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/landing.css" />
+  <style>
+    .details-layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-2xl);
+      padding: var(--space-xl) 0 var(--space-3xl);
+    }
+    .gallery-hero {
+      width: 100%;
+      height: 440px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background: #111827;
+      position: relative;
+      border: 1px solid var(--color-border);
+    }
+    .gallery-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+    .spec-box {
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .spec-box-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .spec-box-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .passport-callout {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+    .passport-callout-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+    .seller-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-md));
+    }
+    .vin-pill {
+      font-family: var(--font-mono);
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      display: inline-block;
+    }
+    @media (max-width: 960px) {
+      .details-layout { grid-template-columns: 1fr; }
+      .gallery-hero { height: 300px; }
+      .specs-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="../index.html" class="navbar-brand">
+      <div class="brand-icon">⛓</div>
+      Car<span class="brand-chain">Chain</span>
+    </a>
+    <ul class="navbar-nav" id="main-nav">
+      <li><a href="../index.html" class="nav-link">Home</a></li>
+      <li><a href="marketplace.html" class="nav-link active">Marketplace</a></li>
+    </ul>
+    <div class="navbar-actions" id="navbar-actions">
+      <a href="login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="register.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+    <button class="navbar-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container">
+    <div style="padding-top:var(--space-md)">
+      <a href="marketplace.html" style="font-size:0.875rem; color:var(--color-text-secondary); display:inline-flex; align-items:center; gap:6px">
+        ← Back to Marketplace
+      </a>
+    </div>
+
+    <div class="details-layout" id="details-container">
+      <!-- Loading Skeleton -->
+      <div>
+        <div class="gallery-hero skeleton"></div>
+        <div class="skeleton" style="height:32px; width:60%; margin:var(--space-lg) 0"></div>
+        <div class="specs-grid">
+          ${Array(6).fill('<div class="skeleton" style="height:70px; border-radius:var(--radius-md)"></div>').join('')}
+        </div>
+      </div>
+      <div>
+        <div class="skeleton" style="height:350px; border-radius:var(--radius-lg)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CarChain Escrow Purchase Modal -->
+<div id="purchase-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px)" onclick="closePurchaseModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:540px;margin:var(--space-lg);border-color:rgba(59,130,246,0.4);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md)">
+      <h3 style="display:flex;align-items:center;gap:8px">🔐 Secure Escrow Purchase</h3>
+      <button onclick="closePurchaseModal()" style="background:none;border:none;font-size:1.2rem;color:var(--color-text-muted);cursor:pointer">✕</button>
+    </div>
+    
+    <div style="margin:var(--space-md) 0;background:var(--color-bg-tertiary);padding:var(--space-md);border-radius:var(--radius-md);border:1px solid var(--color-border)">
+      <div style="display:flex;justify-content:space-between;padding:var(--space-xs) 0;border-bottom:1px solid var(--color-border)">
+        <span class="text-muted">Vehicle</span>
+        <strong id="modal-vehicle-name">—</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:var(--space-xs) 0;border-bottom:1px solid var(--color-border)">
+        <span class="text-muted">VIN</span>
+        <span id="modal-vehicle-vin" class="font-mono text-xs">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:var(--space-xs) 0;border-bottom:1px solid var(--color-border)">
+        <span class="text-muted">Agreed Price</span>
+        <strong id="modal-vehicle-price" style="color:var(--color-accent);font-size:1.15rem">—</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:var(--space-xs) 0">
+        <span class="text-muted">Escrow Protection</span>
+        <span class="badge badge-success">Smart Contract Secured</span>
+      </div>
+    </div>
+
+    <!-- Escrow Method Selection -->
+    <div style="margin:var(--space-md) 0">
+      <label class="form-label" style="font-weight:600;margin-bottom:6px">Select Escrow Settlement Method:</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm)">
+        <label style="border:1px solid var(--color-border);padding:var(--space-sm);border-radius:var(--radius-md);cursor:pointer;display:flex;flex-direction:column;gap:4px;background:var(--color-bg-secondary)">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="radio" name="escrow-mode" value="simulated" checked onchange="toggleEscrowMode()" />
+            <strong style="font-size:0.9rem">Simulated Escrow</strong>
+          </div>
+          <span class="text-xs text-muted">Instant deposit, 0 gas fees. Perfect for testing full lifecycle.</span>
+        </label>
+        <label style="border:1px solid var(--color-border);padding:var(--space-sm);border-radius:var(--radius-md);cursor:pointer;display:flex;flex-direction:column;gap:4px;background:var(--color-bg-secondary)">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="radio" name="escrow-mode" value="web3" onchange="toggleEscrowMode()" />
+            <strong style="font-size:0.9rem">Web3 MetaMask</strong>
+          </div>
+          <span class="text-xs text-muted">Sepolia / Hardhat smart contract escrow. Real ETH locking.</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Web3 Details Section -->
+    <div id="web3-details-section" style="display:none;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-xs)">
+        <span class="text-xs font-semibold uppercase text-muted">Ethereum Testnet (Sepolia / Local)</span>
+        <span id="web3-wallet-status" class="badge badge-warning">Wallet Disconnected</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-xs)">
+        <span class="text-sm">Deposit Amount:</span>
+        <strong id="web3-eth-amount" style="font-family:var(--font-mono);font-size:1.05rem;color:var(--color-accent)">0.05 ETH</strong>
+      </div>
+      <div id="web3-connect-container" style="margin-top:var(--space-sm)">
+        <button type="button" onclick="connectMetaMaskInModal()" class="btn btn-outline btn-sm btn-full" id="btn-connect-wallet">
+          🦊 Connect MetaMask Wallet
+        </button>
+      </div>
+    </div>
+
+    <!-- Buyer Note -->
+    <div class="form-group" style="margin-bottom:var(--space-md)">
+      <label class="form-label" for="buyer-note" style="font-size:0.85rem">Message / Delivery Notes for Seller (Optional):</label>
+      <textarea id="buyer-note" class="form-input" rows="2" placeholder="e.g., Requesting weekend pickup, please bring maintenance logbook..."></textarea>
+    </div>
+
+    <div class="alert alert-info" style="font-size:0.8rem;margin-bottom:var(--space-md)">
+      🛡️ <strong>Buyer Protection Rule:</strong> Your funds are held securely in Escrow. They are NOT paid to the seller until you physically receive the vehicle and confirm handover on your dashboard.
+    </div>
+
+    <div style="display:flex;gap:var(--space-sm);justify-content:flex-end">
+      <button onclick="closePurchaseModal()" class="btn btn-secondary">Cancel</button>
+      <button onclick="executePurchase()" class="btn btn-primary" id="btn-confirm-purchase">
+        Deposit &amp; Lock in Escrow
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/vendor/ethers.umd.min.js"></script>
+<script src="../contracts/deployedAddresses.js"></script>
+<script src="../contracts/abis.js"></script>
+<script src="../js/web3.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let currentListing = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const listingId = params.get('id');
+
+    if (!listingId) {
+      document.getElementById('details-container').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <h3>No Vehicle Selected</h3>
+          <p><a href="marketplace.html" class="btn btn-primary btn-sm" style="margin-top:var(--space-md)">Return to Marketplace</a></p>
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      const response = await CarChainAPI.Listings.getById(listingId);
+      currentListing = response.listing;
+      renderVehicleDetails(currentListing);
+    } catch (err) {
+      document.getElementById('details-container').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <h3>Vehicle Not Found</h3>
+          <p style="color:var(--color-danger);margin:var(--space-sm) 0">${err.message}</p>
+          <a href="marketplace.html" class="btn btn-primary btn-sm">Return to Marketplace</a>
+        </div>
+      `;
+    }
+  });
+
+  function renderVehicleDetails(listing) {
+    const v = listing.vehicle;
+    const seller = listing.seller;
+    const isVerified = v.passportStatus === 'verified';
+    const mainImg = (v.images && v.images[0]?.url) || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80';
+
+    document.title = `${v.year} ${v.make} ${v.model} – CarChain`;
+
+    const container = document.getElementById('details-container');
+    container.innerHTML = `
+      <!-- Left Column: Gallery & Technical Specs -->
+      <div>
+        <div class="gallery-hero">
+          <img src="${mainImg}" alt="${v.displayName}" onerror="this.src='https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80'" />
+        </div>
+
+        <div style="margin-top:var(--space-xl)">
+          <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:4px">
+            <span class="vin-pill">VIN: ${v.vin}</span>
+            <span class="badge ${isVerified ? 'badge-success' : 'badge-accent'}">
+              ${isVerified ? '🛡️ Passport Verified' : '📋 Digital Passport Registered'}
+            </span>
+          </div>
+          <h1 style="font-size:2rem;margin:var(--space-xs) 0">${v.year} ${v.make} ${v.model}</h1>
+          <p style="font-size:1.1rem;color:var(--color-text-secondary)">${listing.title}</p>
+        </div>
+
+        <!-- Technical Specs Grid -->
+        <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Technical Specifications</h3>
+        <div class="specs-grid">
+          <div class="spec-box">
+            <span class="spec-box-label">Mileage</span>
+            <span class="spec-box-val">${v.currentMileage.toLocaleString()} ${v.mileageUnit}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Fuel Type</span>
+            <span class="spec-box-val">${v.fuelType.toUpperCase()}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Transmission</span>
+            <span class="spec-box-val">${v.transmission.toUpperCase()}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Body Type</span>
+            <span class="spec-box-val">${v.bodyType.toUpperCase()}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Engine</span>
+            <span class="spec-box-val">${v.engineSize || 'N/A'}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Horsepower</span>
+            <span class="spec-box-val">${v.horsepower ? v.horsepower + ' HP' : 'N/A'}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Drive Type</span>
+            <span class="spec-box-val">${(v.driveType || 'AWD').toUpperCase()}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Color</span>
+            <span class="spec-box-val">${v.color || 'Standard'}</span>
+          </div>
+          <div class="spec-box">
+            <span class="spec-box-label">Registration</span>
+            <span class="spec-box-val">${v.registrationCountry || 'Verified'}</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div style="margin-top:var(--space-2xl)">
+          <h3 style="margin-bottom:var(--space-md)">Seller Description</h3>
+          <p style="white-space:pre-line;line-height:1.8;color:var(--color-text-primary)">
+            ${listing.description || 'No description provided by the seller.'}
+          </p>
+        </div>
+
+        <!-- Digital Passport Callout -->
+        <div class="passport-callout">
+          <div class="passport-callout-header">
+            <div>
+              <h3 style="display:flex;align-items:center;gap:8px">
+                🛡️ Digital Vehicle Passport
+              </h3>
+              <p class="text-sm text-secondary" style="margin-top:2px">
+                Cryptographically anchored service, inspection, and odometer record history.
+              </p>
+            </div>
+            <a href="passport.html?id=${v._id}" class="btn btn-primary btn-sm">
+              View Complete Passport →
+            </a>
+          </div>
+          <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;font-size:0.85rem;color:var(--color-text-secondary);margin-top:var(--space-md);border-top:1px solid rgba(255,255,255,0.06);padding-top:var(--space-md)">
+            <span>✅ Odometer Tamper Verification</span>
+            <span>✅ Certified Maintenance Records</span>
+            <span>✅ Official Inspection Certificates</span>
+            <span>✅ Chain of Ownership</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Purchase & Seller Card -->
+      <div>
+        <div class="seller-card">
+          <div style="margin-bottom:var(--space-lg)">
+            <span class="text-sm text-muted">Asking Price</span>
+            <div style="font-size:2.2rem;font-weight:800;color:var(--color-text-primary);line-height:1.1;margin-top:4px">
+              ${formatCurrency(listing.price, listing.currency)}
+            </div>
+            ${listing.negotiable ? '<span class="badge badge-muted" style="margin-top:6px">Negotiable</span>' : ''}
+          </div>
+
+          <button onclick="openPurchaseModal()" class="btn btn-primary btn-full btn-lg" style="margin-bottom:var(--space-md)">
+            🔐 Purchase with Escrow Protection
+          </button>
+          
+          <a href="passport.html?id=${v._id}" class="btn btn-outline btn-full" style="margin-bottom:var(--space-xl)">
+            🔍 Inspect Digital Passport
+          </a>
+
+          <!-- Seller Info -->
+          <div style="border-top:1px solid var(--color-border);padding-top:var(--space-lg)">
+            <h4 style="font-size:0.9rem;margin-bottom:var(--space-md);text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+              Seller Information
+            </h4>
+            <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-md)">
+              <div class="sidebar-avatar" style="width:42px;height:42px;font-size:1rem;background:var(--color-accent)">
+                ${getInitials(seller?.firstName, seller?.lastName)}
+              </div>
+              <div>
+                <div style="font-weight:700">${seller ? seller.firstName + ' ' + seller.lastName : 'Private Seller'}</div>
+                <div class="text-xs text-muted">${seller?.businessName || 'Verified Individual'}</div>
+              </div>
+            </div>
+
+            <div class="text-sm text-secondary" style="display:flex;flex-direction:column;gap:6px">
+              ${seller?.phone ? `<div>📞 <strong>Phone:</strong> ${seller.phone}</div>` : ''}
+              ${seller?.email ? `<div>✉️ <strong>Email:</strong> ${seller.email}</div>` : ''}
+              <div>📍 <strong>Location:</strong> ${listing.location?.city ? listing.location.city + ', ' + (listing.location.country || '') : 'Not disclosed'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function openPurchaseModal() {
+    if (!CarChainAPI.SessionManager.isLoggedIn()) {
+      Toast.warning('Please sign in or register to initiate an escrow purchase.');
+      setTimeout(() => {
+        window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+      }, 1000);
+      return;
+    }
+
+    if (!currentListing) return;
+    document.getElementById('modal-vehicle-name').textContent = `${currentListing.vehicle.year} ${currentListing.vehicle.make} ${currentListing.vehicle.model}`;
+    document.getElementById('modal-vehicle-vin').textContent = currentListing.vehicle.vin;
+    document.getElementById('modal-vehicle-price').textContent = formatCurrency(currentListing.price, currentListing.currency);
+    
+    // Estimate ETH conversion (~$3000 / ETH)
+    const ethEst = (currentListing.price / 3000).toFixed(3);
+    document.getElementById('web3-eth-amount').textContent = `${ethEst} ETH`;
+
+    document.getElementById('purchase-modal').style.display = 'flex';
+  }
+
+  function closePurchaseModal() {
+    document.getElementById('purchase-modal').style.display = 'none';
+  }
+
+  function toggleEscrowMode() {
+    const isWeb3 = document.querySelector('input[name="escrow-mode"]:checked').value === 'web3';
+    document.getElementById('web3-details-section').style.display = isWeb3 ? 'block' : 'none';
+    if (isWeb3 && CarChainWeb3.getCurrentAccount()) {
+      updateWalletStatus(CarChainWeb3.getCurrentAccount());
+    }
+  }
+
+  async function connectMetaMaskInModal() {
+    const btn = document.getElementById('btn-connect-wallet');
+    ButtonHelper.setLoading(btn, true);
+    try {
+      const res = await CarChainWeb3.connectWallet();
+      updateWalletStatus(res.account);
+      Toast.success(`MetaMask Connected: ${shortenAddress(res.account)}`);
+    } catch (err) {
+      Toast.error(err.message || 'Failed to connect MetaMask');
+    } finally {
+      ButtonHelper.setLoading(btn, false, '🦊 Connect MetaMask Wallet');
+    }
+  }
+
+  function updateWalletStatus(account) {
+    const badge = document.getElementById('web3-wallet-status');
+    const container = document.getElementById('web3-connect-container');
+    if (account) {
+      badge.className = 'badge badge-success';
+      badge.textContent = `Connected: ${shortenAddress(account)}`;
+      container.innerHTML = `<span class="text-xs text-muted">Ready to broadcast smart contract escrow transaction.</span>`;
+    }
+  }
+
+  async function executePurchase() {
+    const btn = document.getElementById('btn-confirm-purchase');
+    const isWeb3 = document.querySelector('input[name="escrow-mode"]:checked').value === 'web3';
+    const buyerNote = document.getElementById('buyer-note').value;
+
+    ButtonHelper.setLoading(btn, true);
+
+    let txHash = null;
+    let orderId = null;
+
+    try {
+      if (isWeb3) {
+        if (!CarChainWeb3.getCurrentAccount()) {
+          Toast.warning('Please connect your MetaMask wallet first.');
+          await CarChainWeb3.connectWallet();
+        }
+
+        const ethAmount = (currentListing.price / 3000).toFixed(3);
+        const sellerAddress = currentListing.seller.walletAddress || '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+        const tokenId = currentListing.vehicle.blockchainTokenId ? parseInt(currentListing.vehicle.blockchainTokenId) : 0;
+
+        Toast.info('Initiating MetaMask transaction... Please confirm in popup.');
+        const onChainRes = await CarChainWeb3.depositEscrowOnChain(
+          tokenId,
+          currentListing.vehicle.vin,
+          sellerAddress,
+          ethAmount
+        );
+
+        txHash = onChainRes.txHash;
+        orderId = onChainRes.orderId;
+        Toast.success(`Contract Escrow Funded! Tx: ${shortenAddress(txHash)}`);
+      }
+
+      // Record transaction in CarChain backend
+      const res = await CarChainAPI.Transactions.initiate({
+        listingId: currentListing._id,
+        buyerNote,
+        isWeb3,
+        escrowTransactionHash: txHash,
+        escrowOrderId: orderId,
+      });
+
+      closePurchaseModal();
+      Toast.success(res.message || 'Escrow created successfully! Funds safely deposited.');
+
+      setTimeout(() => {
+        window.location.href = 'dashboard.html#escrow';
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      Toast.error(err.message || 'Transaction could not be completed.');
+    } finally {
+      ButtonHelper.setLoading(btn, false, 'Deposit & Lock in Escrow');
+    }
+  }
+</script>
+</body>
+</html>

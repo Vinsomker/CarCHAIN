@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Vehicle Passport – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <style>
+    .passport-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg) var(--space-3xl);
+    }
+    .passport-header-card {
+      background: linear-gradient(135deg, #111a2e 0%, #0d1527 100%);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.12);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: var(--space-2xl);
+    }
+    .passport-header-card::after {
+      content: 'DIGITAL PASSPORT';
+      position: absolute;
+      right: -20px;
+      bottom: -15px;
+      font-size: 4rem;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.02);
+      pointer-events: none;
+      letter-spacing: 0.08em;
+    }
+    .passport-badge-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--color-success);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-lg);
+    }
+    .passport-badge-ribbon .pulse-dot {
+      width: 8px; height: 8px;
+      background: var(--color-success);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+    .vin-display-box {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      display: inline-block;
+      letter-spacing: 0.12em;
+      color: var(--color-accent);
+      margin: var(--space-xs) 0 var(--space-lg);
+    }
+    .passport-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--space-xl);
+    }
+    .passport-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+    }
+    .timeline-event-card {
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      margin-top: 6px;
+    }
+    .lookup-bar {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-xl);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      padding: 8px;
+      border-radius: var(--radius-lg);
+    }
+    .lookup-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--color-text-primary);
+      padding: 0 var(--space-md);
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    @media (max-width: 860px) {
+      .passport-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .navbar, .lookup-bar, .no-print { display: none !important; }
+      body { background: #fff; color: #000; }
+      .passport-card, .passport-header-card { border-color: #ccc; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Navbar -->
+<nav class="navbar no-print">
+  <div class="navbar-inner">
+    <a href="../index.html" class="navbar-brand">
+      <div class="brand-icon">⛓</div>
+      Car<span class="brand-chain">Chain</span>
+      <span class="badge badge-accent" style="margin-left:4px; font-size:0.65rem;">Digital Passport</span>
+    </a>
+    <ul class="navbar-nav" id="main-nav">
+      <li><a href="../index.html" class="nav-link">Home</a></li>
+      <li><a href="marketplace.html" class="nav-link">Marketplace</a></li>
+    </ul>
+    <div class="navbar-actions" id="navbar-actions">
+      <a href="login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="register.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+    <button class="navbar-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="passport-container">
+
+    <!-- Direct VIN Lookup Bar -->
+    <div class="lookup-bar no-print">
+      <input type="text" id="vin-search-input" placeholder="Enter 17-character VIN to verify digital passport..." maxlength="17" />
+      <button onclick="lookupVin()" class="btn btn-primary btn-sm">🔍 Lookup Passport</button>
+    </div>
+
+    <!-- Main Passport Content -->
+    <div id="passport-content">
+      <!-- Loading Skeleton -->
+      <div class="passport-header-card">
+        <div class="skeleton" style="height:28px; width:220px; border-radius:var(--radius-full); margin-bottom:16px"></div>
+        <div class="skeleton" style="height:44px; width:50%; margin-bottom:12px"></div>
+        <div class="skeleton" style="height:36px; width:300px; border-radius:var(--radius-md)"></div>
+      </div>
+      <div class="passport-grid">
+        <div>
+          <div class="skeleton" style="height:400px; border-radius:var(--radius-lg)"></div>
+        </div>
+        <div>
+          <div class="skeleton" style="height:350px; border-radius:var(--radius-lg)"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../js/vendor/ethers.umd.min.js"></script>
+<script src="../contracts/deployedAddresses.js"></script>
+<script src="../contracts/abis.js"></script>
+<script src="../js/web3.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let currentVehicleId = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const vin = params.get('vin');
+
+    if (id) {
+      loadPassportById(id);
+    } else if (vin) {
+      loadPassportByVin(vin);
+    } else {
+      // Default to demo BMW
+      loadPassportByVin('WBA33AY08NFP28914');
+    }
+
+    document.getElementById('vin-search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') lookupVin();
+    });
+  });
+
+  function lookupVin() {
+    const vin = document.getElementById('vin-search-input').value.trim();
+    if (!vin || vin.length !== 17) {
+      Toast.error('Please enter a valid 17-character VIN.');
+      return;
+    }
+    loadPassportByVin(vin);
+  }
+
+  async function loadPassportById(id) {
+    try {
+      const response = await CarChainAPI.Vehicles.getPassport(id);
+      renderPassport(response.passport);
+    } catch (err) {
+      renderError(err.message);
+    }
+  }
+
+  async function loadPassportByVin(vin) {
+    try {
+      const response = await CarChainAPI.Vehicles.getByVin(vin);
+      renderPassport(response.passport);
+    } catch (err) {
+      renderError(`No passport found for VIN: ${vin}`);
+    }
+  }
+
+  function renderError(msg) {
+    document.getElementById('passport-content').innerHTML = `
+      <div class="card" style="text-align:center; padding:var(--space-3xl)">
+        <div style="font-size:3rem;margin-bottom:var(--space-md)">🛡️</div>
+        <h3>Passport Not Found</h3>
+        <p style="color:var(--color-danger);margin:var(--space-md) 0">${msg}</p>
+        <a href="marketplace.html" class="btn btn-secondary btn-sm">Browse Marketplace Vehicles</a>
+      </div>
+    `;
+  }
+
+  function renderPassport(passportData) {
+    const { vehicle, maintenanceRecords, inspectionCertificates, timeline, stats } = passportData;
+    currentVehicleId = vehicle._id;
+
+    document.title = `${vehicle.year} ${vehicle.make} ${vehicle.model} – Digital Passport`;
+    document.getElementById('vin-search-input').value = vehicle.vin;
+
+    const isVerified = vehicle.passportStatus === 'verified' || stats.isVerified;
+    const primaryImg = (vehicle.images && vehicle.images[0]?.url) || '';
+
+    const contentEl = document.getElementById('passport-content');
+    contentEl.innerHTML = `
+      <!-- Passport Header Banner -->
+      <div class="passport-header-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:var(--space-md)">
+          <div>
+            <div class="passport-badge-ribbon">
+              <span class="pulse-dot"></span>
+              ${isVerified ? 'CarChain Certified Digital Passport' : 'CarChain Registered Vehicle'}
+            </div>
+            <h1 style="font-size:clamp(1.8rem, 3.5vw, 2.6rem); margin-bottom:4px">
+              ${vehicle.year} ${vehicle.make} ${vehicle.model}
+            </h1>
+            <div class="text-secondary" style="font-size:1rem; margin-bottom:var(--space-md)">
+              ${vehicle.variant || vehicle.bodyType.toUpperCase()} · ${vehicle.color || ''}
+            </div>
+          </div>
+          <div class="no-print" style="display:flex; gap:8px">
+            <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨️ Print / PDF</button>
+            <button onclick="copyPassportLink()" class="btn btn-outline btn-sm">🔗 Share Link</button>
+          </div>
+        </div>
+
+        <div>
+          <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--color-text-muted); display:block">
+            Vehicle Identification Number (VIN)
+          </span>
+          <div class="vin-display-box">${vehicle.vin}</div>
+        </div>
+
+        <div style="display:flex; gap:var(--space-xl); flex-wrap:wrap; border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-lg); margin-top:var(--space-sm)">
+          <div>
+            <span class="text-xs text-muted" style="text-transform:uppercase">Certified Mileage</span>
+            <div style="font-size:1.3rem; font-weight:800; color:var(--color-text-primary)">
+              ${vehicle.currentMileage.toLocaleString()} ${vehicle.mileageUnit}
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-muted" style="text-transform:uppercase">Service Records</span>
+            <div style="font-size:1.3rem; font-weight:800; color:var(--color-success)">
+              ${stats.totalServices} Logged
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-muted" style="text-transform:uppercase">Inspections</span>
+            <div style="font-size:1.3rem; font-weight:800; color:var(--color-info)">
+              ${stats.totalInspections} Verified
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-muted" style="text-transform:uppercase">Owners Chain</span>
+            <div style="font-size:1.3rem; font-weight:800; color:var(--color-text-primary)">
+              ${stats.totalOwners} Registered
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid layout -->
+      <div class="passport-grid">
+        
+        <!-- Left: Chronological History Timeline -->
+        <div>
+          <div class="passport-card">
+            <h3 style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-lg)">
+              <span>📜 Chronological History Timeline</span>
+              <span class="badge badge-accent">${timeline.length} Events</span>
+            </h3>
+
+            <div class="timeline">
+              ${timeline.map(item => `
+                <div class="timeline-item">
+                  <div class="timeline-dot ${item.badgeClass || 'accent'}"></div>
+                  <div class="timeline-time">${formatDate(item.date)}</div>
+                  <div class="timeline-content">${item.icon || '📌'} ${item.title}</div>
+                  <div class="timeline-event-card">
+                    <p class="text-sm" style="color:var(--color-text-primary); margin-bottom:4px">${item.details}</p>
+                    <div style="display:flex; gap:var(--space-md); flex-wrap:wrap; font-size:0.75rem; color:var(--color-text-muted)">
+                      ${item.mileage !== undefined && item.mileage !== null ? `<span>📏 <strong>Odometer:</strong> ${item.mileage.toLocaleString()} ${vehicle.mileageUnit}</span>` : ''}
+                      ${item.garage ? `<span>🔧 <strong>Garage:</strong> ${item.garage}</span>` : ''}
+                      ${item.inspector ? `<span>🛡️ <strong>Inspector:</strong> ${item.inspector}</span>` : ''}
+                      ${item.certificateNumber ? `<span>📋 <strong>Cert:</strong> ${item.certificateNumber}</span>` : ''}
+                      ${item.cost ? `<span>💰 <strong>Total:</strong> ${item.cost}</span>` : ''}
+                      ${item.isVerified ? `<span class="badge badge-success" style="font-size:0.65rem">Verified Entry</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Certified Maintenance Records Detail -->
+          <div class="passport-card">
+            <h3 style="margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px">
+              🔧 Certified Maintenance Log (${maintenanceRecords.length})
+            </h3>
+            ${maintenanceRecords.length === 0 ? `
+              <p class="text-sm text-muted">No maintenance records logged for this vehicle yet.</p>
+            ` : `
+              <div style="display:flex; flex-direction:column; gap:var(--space-md)">
+                ${maintenanceRecords.map(rec => `
+                  <div style="background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-md)">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+                      <strong style="color:var(--color-accent); font-size:0.95rem">
+                        ${rec.serviceType.replace('_', ' ').toUpperCase()}
+                      </strong>
+                      <span class="text-xs text-muted">${formatDate(rec.serviceDate)}</span>
+                    </div>
+                    <p class="text-sm" style="color:var(--color-text-primary); margin-bottom:6px">${rec.description}</p>
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--color-text-muted); border-top:1px solid var(--color-border-light); padding-top:6px">
+                      <span>By: ${rec.garage?.businessName || rec.garage?.firstName || 'Certified Partner'}</span>
+                      <span>Mileage: ${rec.mileageAtService.toLocaleString()} ${vehicle.mileageUnit}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+
+          <!-- Technical Inspection Certificates -->
+          <div class="passport-card">
+            <h3 style="margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px">
+              📋 Technical Inspection Certificates (${inspectionCertificates.length})
+            </h3>
+            ${inspectionCertificates.length === 0 ? `
+              <p class="text-sm text-muted">No official inspection certificates recorded yet.</p>
+            ` : `
+              <div style="display:flex; flex-direction:column; gap:var(--space-md)">
+                ${inspectionCertificates.map(cert => `
+                  <div style="background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-md)">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+                      <div>
+                        <strong>Certificate #${cert.certificateNumber}</strong>
+                        <span class="text-xs text-muted" style="margin-left:8px">${formatDate(cert.inspectionDate)}</span>
+                      </div>
+                      <span class="badge ${cert.result === 'pass' ? 'badge-success' : 'badge-danger'}">
+                        ${cert.result.toUpperCase()}
+                      </span>
+                    </div>
+                    <p class="text-sm" style="color:var(--color-text-secondary); margin-bottom:6px">
+                      ${cert.comments || 'Vehicle met all technical safety standards.'}
+                    </p>
+                    ${cert.checklist && Object.keys(cert.checklist).length > 0 ? `
+                      <div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 8px">
+                        ${Object.entries(cert.checklist).map(([key, val]) => `
+                          <span style="font-size:0.7rem; padding:2px 6px; border-radius:3px; background:var(--color-bg-secondary); border:1px solid var(--color-border); color:${val.status === 'ok' ? 'var(--color-success)' : val.status === 'fail' ? 'var(--color-danger)' : 'var(--color-warning)'}">
+                            ${key.toUpperCase()}: ${val.status?.toUpperCase() || 'OK'}
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                    <div class="text-xs text-muted">
+                      Inspector: ${cert.inspector?.businessName || cert.inspector?.firstName || 'Approved Agency'} · Mileage at test: ${cert.mileageAtInspection.toLocaleString()} ${vehicle.mileageUnit}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- Right: Technical Identity & Ownership Provenance -->
+        <div>
+          <!-- Vehicle Identity Card -->
+          <div class="passport-card">
+            <h3 style="margin-bottom:var(--space-md)">Vehicle Identity</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:0.875rem">
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Brand & Model</span>
+                <strong>${vehicle.make} ${vehicle.model}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Model Year</span>
+                <strong>${vehicle.year}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Powertrain</span>
+                <strong>${vehicle.fuelType.toUpperCase()}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Transmission</span>
+                <strong>${vehicle.transmission.toUpperCase()}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Engine</span>
+                <strong>${vehicle.engineSize || 'N/A'}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Drive Type</span>
+                <strong>${(vehicle.driveType || 'AWD').toUpperCase()}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Doors / Seats</span>
+                <strong>${vehicle.doors || 4} Doors / ${vehicle.seats || 5} Seats</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--color-border-light); padding-bottom:6px">
+                <span class="text-muted">Registration</span>
+                <strong>${vehicle.registrationCountry || 'Verified'}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between">
+                <span class="text-muted">Accident Record</span>
+                <strong style="color:${vehicle.hasAccidentHistory ? 'var(--color-danger)' : 'var(--color-success)'}">
+                  ${vehicle.hasAccidentHistory ? 'Accident Reported' : 'No Accidents Reported'}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ownership History Card -->
+          <div class="passport-card">
+            <h3 style="margin-bottom:var(--space-md)">Ownership Chain</h3>
+            <div style="display:flex; flex-direction:column; gap:var(--space-sm)">
+              ${vehicle.ownershipHistory.map((oh, i) => `
+                <div style="padding:var(--space-sm) var(--space-md); background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-sm)">
+                  <div style="display:flex; justify-content:space-between; font-size:0.8rem">
+                    <span class="text-muted">Owner #${i + 1} (${oh.transferMethod || 'Purchase'})</span>
+                    <span class="text-muted">${formatDate(oh.acquiredAt)}</span>
+                  </div>
+                  <div style="font-weight:700; font-size:0.9rem; margin-top:2px">
+                    ${oh.ownerName || (oh.owner ? oh.owner.firstName + ' ' + oh.owner.lastName : 'Private Owner')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Blockchain Immutable Digital Passport Card -->
+          <div class="passport-card" style="background:linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%); border-color:rgba(59, 130, 246, 0.3)">
+            <h4 style="font-size:0.95rem; margin-bottom:var(--space-xs); display:flex; align-items:center; justify-content:space-between">
+              <span style="display:flex;align-items:center;gap:6px">⛓️ Blockchain Smart Contract Twin</span>
+              ${vehicle.isOnChain ? '<span class="badge badge-success">ERC-721 Active</span>' : '<span class="badge badge-warning">Off-Chain</span>'}
+            </h4>
+
+            ${vehicle.isOnChain ? `
+              <div style="font-size:0.8rem;display:flex;flex-direction:column;gap:6px;margin:var(--space-sm) 0">
+                <div style="display:flex;justify-content:space-between">
+                  <span class="text-muted">Token ID:</span>
+                  <strong class="font-mono text-accent">#${vehicle.blockchainTokenId || '1'}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span class="text-muted">Contract:</span>
+                  <span class="font-mono text-xs">${shortenAddress(vehicle.blockchainContract || window.CarChainContracts?.VehicleRegistry || '0x5FbDB2315678afecb367f032d93F642f64180aa3')}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span class="text-muted">Standard:</span>
+                  <span>ERC721URIStorage</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span class="text-muted">Anti-Rollback:</span>
+                  <span class="badge badge-success" style="font-size:0.65rem">Cryptographically Enforced</span>
+                </div>
+              </div>
+            ` : `
+              <p class="text-xs text-secondary" style="line-height:1.5;margin:var(--space-xs) 0 var(--space-sm)">
+                This vehicle passport is registered in the CarChain registry. The owner can anchor it to Ethereum as an immutable NFT digital twin.
+              </p>
+              <button onclick="mintPassportNFT('${vehicle._id}', '${vehicle.vin}', ${vehicle.currentMileage})" class="btn btn-primary btn-sm btn-full" id="btn-mint-nft">
+                ⚡ Mint NFT Passport on Blockchain
+              </button>
+            `}
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  async function mintPassportNFT(vehicleId, vin, currentMileage) {
+    if (!CarChainAPI.SessionManager.isLoggedIn()) {
+      Toast.warning('Please log in with an owner or admin account to mint.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-mint-nft');
+    if (btn) ButtonHelper.setLoading(btn, true);
+
+    try {
+      if (!CarChainWeb3.getCurrentAccount()) {
+        Toast.info('Connecting MetaMask wallet...');
+        await CarChainWeb3.connectWallet();
+      }
+
+      const account = CarChainWeb3.getCurrentAccount();
+      Toast.info('Minting Digital Passport NFT via smart contract... Please confirm transaction.');
+
+      const mintRes = await CarChainWeb3.mintPassportOnChain(
+        account,
+        vin,
+        currentMileage,
+        `https://carchain.dev/api/vehicles/vin/${vin}`
+      );
+
+      Toast.success(`Passport Minted! Tx: ${shortenAddress(mintRes.txHash)}`);
+
+      // Update backend database
+      await CarChainAPI.Vehicles.recordBlockchainMint(vehicleId, {
+        tokenId: mintRes.tokenId,
+        contractAddress: window.CarChainContracts?.VehicleRegistry || '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+        transactionHash: mintRes.txHash,
+      });
+
+      Toast.success('Passport NFT successfully synchronized with CarChain!');
+      await loadPassportById(vehicleId);
+    } catch (err) {
+      console.error(err);
+      Toast.error(err.message || 'Minting failed.');
+    } finally {
+      if (btn) ButtonHelper.setLoading(btn, false, '⚡ Mint NFT Passport on Blockchain');
+    }
+  }
+
+  function copyPassportLink() {
+    navigator.clipboard.writeText(window.location.href);
+    Toast.success('Passport URL copied to clipboard!');
+  }
+</script>
+</body>
+</html>

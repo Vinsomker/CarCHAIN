@@ -1,0 +1,23 @@
+{
+  "name": "carchain-blockchain",
+  "version": "1.0.0",
+  "description": "CarChain Solidity Smart Contracts & Hardhat Environment",
+  "main": "hardhat.config.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia"
+  },
+  "keywords": ["solidity", "hardhat", "erc721", "escrow", "carchain", "sepolia"],
+  "author": "CarChain Team",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.5"
+  }
+}

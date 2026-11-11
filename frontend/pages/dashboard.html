@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div style="display:flex;align-items:center;gap:var(--space-md);">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <a href="../index.html" class="navbar-brand">
+        <div class="brand-icon">⛓</div>
+        Car<span class="brand-chain">Chain</span>
+      </a>
+    </div>
+    <div class="navbar-actions" id="navbar-actions">
+      <button onclick="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Dashboard Layout ───────────────────────────────────────────────────── -->
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboard-sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+        <div class="sidebar-user-role" id="sidebar-role"></div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Dynamic nav items based on role -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="btn btn-secondary btn-sm btn-full">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="dashboard-content" id="dashboard-content">
+
+      <!-- Page Header -->
+      <div class="page-header" id="page-header">
+        <div class="page-header-text">
+          <h1 id="page-title">Dashboard</h1>
+          <p id="page-subtitle">Welcome to CarChain</p>
+        </div>
+        <div class="page-header-actions" id="page-actions"></div>
+      </div>
+
+      <!-- Approval notice (shown for pending garage/inspector) -->
+      <div id="approval-notice" style="display:none" class="alert alert-warning">
+        ⏳ <strong>Account Pending Approval:</strong> Your account is awaiting administrator review.
+        You will receive full access once approved. This typically takes 1–2 business days.
+      </div>
+
+      <!-- Welcome banner (shown on first login) -->
+      <div id="welcome-banner" style="display:none" class="card" style="margin-bottom:var(--space-xl); background:var(--color-accent-light); border-color:rgba(59,130,246,0.3);">
+        <div style="display:flex;align-items:center;gap:var(--space-lg);">
+          <div style="font-size:2.5rem;">🎉</div>
+          <div>
+            <h3 style="margin-bottom:var(--space-xs);">Welcome to CarChain!</h3>
+            <p id="welcome-text">Your account has been created successfully.</p>
+          </div>
+          <button onclick="document.getElementById('welcome-banner').style.display='none'" style="margin-left:auto; background:none; border:none; font-size:1.3rem; color:var(--color-text-muted); cursor:pointer;">✕</button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid" id="stats-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Main content area -->
+      <div id="main-content">
+        <!-- Populated by JS based on role -->
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/vendor/ethers.umd.min.js"></script>
+<script src="../contracts/deployedAddresses.js"></script>
+<script src="../contracts/abis.js"></script>
+<script src="../js/web3.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Dashboard initialization
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const ROLE_CONFIGS = {
+    buyer: {
+      title: 'Buyer Dashboard',
+      subtitle: 'Browse vehicles and manage your active escrow purchases',
+      nav: [
+        { icon: '🏠', label: 'Overview', href: 'dashboard.html', active: true },
+        { icon: '🔍', label: 'Marketplace', href: 'marketplace.html' },
+        { icon: '🛒', label: 'Escrow Purchases', href: '#escrow-section' },
+        { icon: '👤', label: 'Profile & Wallet', href: '#profile' },
+      ],
+      stats: [
+        { label: 'Active Escrow Orders', value: '0', icon: '🔒', color: 'yellow' },
+        { label: 'Purchased Vehicles', value: '0', icon: '🚗', color: 'green' },
+        { label: 'Total Purchases', value: '0', icon: '🛒', color: 'blue' },
+        { label: 'Passports Verified', value: '0', icon: '📋', color: 'red' },
+      ],
+    },
+    seller: {
+      title: 'Seller Dashboard',
+      subtitle: 'Manage your vehicle listings',
+      nav: [
+        { icon: '🏠', label: 'Overview',  href: 'seller-dashboard.html', active: true },
+        { icon: '📋', label: 'My Listings', href: '#' },
+        { icon: '🚗', label: 'My Vehicles', href: '#' },
+        { icon: '💰', label: 'Sales', href: '#' },
+        { icon: '👤', label: 'Profile', href: '#profile' },
+      ],
+      stats: [
+        { label: 'Active Listings', value: '0', icon: '📋', color: 'blue' },
+        { label: 'Total Views',     value: '0', icon: '👁',  color: 'green' },
+        { label: 'Vehicles Sold',   value: '0', icon: '✅',  color: 'yellow' },
+        { label: 'Total Revenue',   value: '$0', icon: '💰', color: 'red' },
+      ],
+    },
+    garage: {
+      title: 'Garage Dashboard',
+      subtitle: 'Manage maintenance records for vehicles',
+      nav: [
+        { icon: '🏠', label: 'Overview',     href: 'garage-dashboard.html', active: true },
+        { icon: '🔧', label: 'Add Record',   href: '#' },
+        { icon: '📋', label: 'My Records',   href: '#' },
+        { icon: '🚗', label: 'Vehicles',     href: '#' },
+        { icon: '👤', label: 'Profile',      href: '#profile' },
+      ],
+      stats: [
+        { label: 'Records Added', value: '0', icon: '🔧', color: 'blue' },
+        { label: 'Vehicles Served', value: '0', icon: '🚗', color: 'green' },
+        { label: 'This Month', value: '0', icon: '📅', color: 'yellow' },
+        { label: 'Approval Status', value: '—', icon: '✅', color: 'red' },
+      ],
+    },
+    inspector: {
+      title: 'Inspector Dashboard',
+      subtitle: 'Issue and manage vehicle inspection certificates',
+      nav: [
+        { icon: '🏠', label: 'Overview',       href: 'inspector-dashboard.html', active: true },
+        { icon: '📋', label: 'New Inspection', href: '#' },
+        { icon: '📁', label: 'Certificates',   href: '#' },
+        { icon: '🚗', label: 'Vehicles',       href: '#' },
+        { icon: '👤', label: 'Profile',        href: '#profile' },
+      ],
+      stats: [
+        { label: 'Certs Issued', value: '0', icon: '📋', color: 'blue' },
+        { label: 'Passed',       value: '0', icon: '✅',  color: 'green' },
+        { label: 'Failed',       value: '0', icon: '❌',  color: 'red' },
+        { label: 'Expiring Soon', value: '0', icon: '⏰', color: 'yellow' },
+      ],
+    },
+    admin: {
+      title: 'Admin Dashboard',
+      subtitle: 'Platform management and oversight',
+      nav: [
+        { icon: '🏠', label: 'Overview',    href: 'admin-dashboard.html', active: true },
+        { icon: '👥', label: 'Users',       href: 'admin-dashboard.html#users' },
+        { icon: '🚗', label: 'Vehicles',    href: '#' },
+        { icon: '📋', label: 'Listings',    href: '#' },
+        { icon: '🔧', label: 'Approvals',   href: 'admin-dashboard.html#approvals', badge: '?' },
+        { icon: '📊', label: 'Reports',     href: '#' },
+      ],
+      stats: [
+        { label: 'Total Users',    value: '—', icon: '👥', color: 'blue' },
+        { label: 'Total Vehicles', value: '—', icon: '🚗', color: 'green' },
+        { label: 'Active Listings', value: '—', icon: '📋', color: 'yellow' },
+        { label: 'Pending Approvals', value: '—', icon: '⏳', color: 'red' },
+      ],
+    },
+  };
+
+  async function initDashboard() {
+    if (!requireAuth()) return;
+
+    const user = CarChainAPI.SessionManager.getUser();
+    const role = user?.role || 'buyer';
+
+    // Route other roles to their dedicated dashboards
+    if (role !== 'buyer') {
+      window.location.href = getDashboardUrl(role);
+      return;
+    }
+
+    const config = ROLE_CONFIGS[role] || ROLE_CONFIGS.buyer;
+
+    // Update sidebar user info
+    document.getElementById('sidebar-name').textContent = `${user.firstName} ${user.lastName}`;
+    document.getElementById('sidebar-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+    document.getElementById('sidebar-avatar').textContent = getInitials(user.firstName, user.lastName);
+
+    // Page title
+    document.getElementById('page-title').textContent = config.title;
+    document.getElementById('page-subtitle').textContent = config.subtitle;
+    document.title = `${config.title} – CarChain`;
+
+    // Build sidebar nav
+    const navEl = document.getElementById('sidebar-nav');
+    navEl.innerHTML = config.nav.map(item => `
+      <a href="${item.href}" class="sidebar-link ${item.active ? 'active' : ''}">
+        <span class="sidebar-link-icon">${item.icon}</span>
+        ${item.label}
+        ${item.badge ? `<span class="sidebar-badge">${item.badge}</span>` : ''}
+      </a>
+    `).join('');
+
+    // Build stats grid
+    const statsEl = document.getElementById('stats-grid');
+    statsEl.innerHTML = config.stats.map(stat => `
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-card-label">${stat.label}</span>
+          <div class="stat-card-icon ${stat.color}">${stat.icon}</div>
+        </div>
+        <div class="stat-card-value">${stat.value}</div>
+      </div>
+    `).join('');
+
+    // Show pending approval notice
+    if (['garage', 'inspector'].includes(role) && user.approvalStatus === 'pending') {
+      document.getElementById('approval-notice').style.display = 'flex';
+    }
+
+    // Show welcome banner
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('welcome') === '1') {
+      const bannerEl = document.getElementById('welcome-banner');
+      bannerEl.style.display = 'flex';
+      if (params.get('pending') === '1') {
+        document.getElementById('welcome-text').textContent =
+          'Your account is pending administrator approval. You will be notified once your account is approved.';
+      }
+    }
+
+    // Role-specific main content
+    renderMainContent(role, user);
+
+    // If admin, fetch real stats
+    if (role === 'admin') {
+      loadAdminStats();
+    }
+  }
+
+  function renderMainContent(role, user) {
+    const el = document.getElementById('main-content');
+
+    el.innerHTML = `
+      <!-- Active Escrow Purchases Section -->
+      <div class="data-table-wrapper" style="margin-top:var(--space-xl)" id="escrow-section">
+        <div class="data-table-header" style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <h3 class="data-table-title" style="display:flex;align-items:center;gap:8px">
+              🔐 Active Escrow Purchases &amp; Orders
+            </h3>
+            <p class="text-xs text-muted">Track payments locked in escrow and confirm physical vehicle handover to transfer ownership.</p>
+          </div>
+          <a href="marketplace.html" class="btn btn-primary btn-sm">+ Browse Vehicles</a>
+        </div>
+        <div id="purchases-container" style="padding:var(--space-md)">
+          <div class="skeleton" style="height:120px;border-radius:var(--radius-md)"></div>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div class="card" style="margin-top:var(--space-xl)" id="profile">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-lg)">
+          <h3 style="margin:0">Profile &amp; Wallet</h3>
+          <button onclick="connectDashboardWallet()" class="btn btn-outline btn-sm" id="btn-dashboard-wallet">
+            🦊 Connect MetaMask
+          </button>
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Full Name</div>
+            <div class="info-value">${user.firstName} ${user.lastName}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value">${user.email}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Role</div>
+            <div class="info-value">${getRoleBadge(user.role)}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Account Status</div>
+            <div class="info-value">${getStatusBadge(user.approvalStatus || 'approved')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Member Since</div>
+            <div class="info-value">${formatDate(user.createdAt)}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Connected Wallet</div>
+            <div class="info-value font-mono text-xs" id="profile-wallet-address" style="color:var(--color-accent)">
+              ${user.walletAddress || 'Not connected'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    loadBuyerPurchases();
+  }
+
+  async function connectDashboardWallet() {
+    const btn = document.getElementById('btn-dashboard-wallet');
+    ButtonHelper.setLoading(btn, true);
+    try {
+      const res = await CarChainWeb3.connectWallet();
+      document.getElementById('profile-wallet-address').textContent = res.account;
+      Toast.success(`MetaMask Connected: ${shortenAddress(res.account)}`);
+    } catch (err) {
+      Toast.error(err.message || 'Could not connect MetaMask');
+    } finally {
+      ButtonHelper.setLoading(btn, false, '🦊 Connect MetaMask');
+    }
+  }
+
+  async function loadBuyerPurchases() {
+    const container = document.getElementById('purchases-container');
+    if (!container) return;
+
+    try {
+      const res = await CarChainAPI.Transactions.getMyPurchases();
+      const purchases = res.data || [];
+
+      // Update stat cards
+      const activeEscrow = purchases.filter(p => p.status === 'funds_locked').length;
+      const transferred = purchases.filter(p => p.status === 'ownership_transferred' || p.status === 'completed').length;
+
+      const statCards = document.querySelectorAll('.stat-card-value');
+      if (statCards[0]) statCards[0].textContent = activeEscrow;
+      if (statCards[1]) statCards[1].textContent = transferred;
+      if (statCards[2]) statCards[2].textContent = purchases.length;
+      if (statCards[3]) statCards[3].textContent = transferred;
+
+      if (purchases.length === 0) {
+        container.innerHTML = `
+          <div class="table-empty" style="padding:var(--space-2xl) 0">
+            <div class="table-empty-icon" style="font-size:3rem;margin-bottom:var(--space-md)">🛒</div>
+            <h3>No Escrow Purchases Yet</h3>
+            <p class="text-muted" style="margin:var(--space-xs) 0 var(--space-lg)">You haven't initiated any vehicle purchases. When you purchase a vehicle, its escrow tracking and handover controls will appear right here.</p>
+            <a href="marketplace.html" class="btn btn-primary btn-sm">Explore Marketplace</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = purchases.map(tx => {
+        const v = tx.vehicle || {};
+        const isLocked = tx.status === 'funds_locked';
+        const isTransferred = tx.status === 'ownership_transferred';
+        const isCompleted = tx.status === 'completed';
+        const isRefunded = tx.status === 'refunded' || tx.status === 'cancelled';
+
+        const sellerName = tx.seller
+          ? ((tx.seller.firstName || '') + ' ' + (tx.seller.lastName || '')).trim() || tx.seller.name || 'Private Seller'
+          : 'Private Seller';
+
+        const vehicleTitle = v.displayName || `${v.year || ''} ${v.make || ''} ${v.model || 'Vehicle'}`.trim();
+
+        const txHashDisplay = tx.escrowTransactionHash
+          ? (typeof shortenAddress === 'function' ? shortenAddress(tx.escrowTransactionHash) : tx.escrowTransactionHash.substring(0, 10) + '...')
+          : '';
+
+        let statusBadge = '';
+        let statusCardBorder = 'border-color: rgba(59, 130, 246, 0.3);';
+
+        if (isLocked) {
+          statusBadge = '<span class="badge badge-warning" style="font-size:0.85rem;padding:6px 12px">🔒 Funds Locked in Escrow</span>';
+          statusCardBorder = 'border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);';
+        } else if (isTransferred) {
+          statusBadge = '<span class="badge badge-success" style="font-size:0.85rem;padding:6px 12px">✅ Ownership Transferred to You</span>';
+          statusCardBorder = 'border: 1px solid rgba(34, 197, 94, 0.4);';
+        } else if (isCompleted) {
+          statusBadge = '<span class="badge badge-info" style="font-size:0.85rem;padding:6px 12px">🎉 Transaction Complete</span>';
+          statusCardBorder = 'border: 1px solid rgba(59, 130, 246, 0.4);';
+        } else if (isRefunded) {
+          statusBadge = '<span class="badge badge-danger" style="font-size:0.85rem;padding:6px 12px">↩️ Refunded / Cancelled</span>';
+          statusCardBorder = 'border: 1px solid rgba(239, 68, 68, 0.3);';
+        }
+
+        const mainImg = (v.images && v.images[0]?.url) || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=80';
+
+        return `
+          <div class="card" style="margin-bottom:var(--space-lg);${statusCardBorder};background:var(--color-bg-secondary);padding:var(--space-xl)">
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-lg);justify-content:space-between;align-items:flex-start">
+              <div style="display:flex;gap:var(--space-lg);align-items:center;flex:1;min-width:300px">
+                <img src="${mainImg}" alt="${vehicleTitle}" style="width:120px;height:85px;border-radius:var(--radius-lg);object-fit:cover;border:1px solid var(--color-border);flex-shrink:0" />
+                <div>
+                  <h3 style="margin:0 0 6px 0;font-size:1.25rem">${vehicleTitle}</h3>
+                  <div class="text-sm text-muted" style="display:flex;gap:var(--space-md);align-items:center;flex-wrap:wrap">
+                    <span class="font-mono">VIN: <strong>${v.vin || '—'}</strong></span>
+                    <span>•</span>
+                    <span>Seller: <strong>${sellerName}</strong></span>
+                  </div>
+                  <div style="margin-top:8px;display:flex;gap:var(--space-xs);align-items:center">
+                    <span class="badge ${tx.isSimulated ? 'badge-muted' : 'badge-accent'}" style="font-size:0.75rem">
+                      ${tx.isSimulated ? '⚡ CarChain Smart Escrow' : '🔗 Sepolia Web3 On-Chain'}
+                    </span>
+                    ${txHashDisplay ? `<span class="text-xs font-mono text-muted">Tx: ${txHashDisplay}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style="text-align:right">
+                <div class="text-xs text-muted uppercase" style="letter-spacing:0.05em;margin-bottom:4px">Escrow Amount</div>
+                <div style="font-size:1.6rem;font-weight:800;color:var(--color-accent)">
+                  ${formatCurrency(tx.amount, tx.currency)}
+                </div>
+                <div style="margin-top:6px">${statusBadge}</div>
+              </div>
+            </div>
+
+            <!-- Escrow Status Steps Banner -->
+            <div style="margin:var(--space-lg) 0;background:var(--color-bg-tertiary);border-radius:var(--radius-md);padding:var(--space-md);border:1px solid var(--color-border)">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:var(--color-text-secondary);flex-wrap:wrap;gap:8px">
+                <span style="color:var(--color-success)">✓ 1. Deposit Funded</span>
+                <span style="color:${isLocked ? 'var(--color-warning);font-weight:700' : 'var(--color-success)'}">
+                  ${isLocked ? '🔒 2. Escrow Active (Funds Held)' : '✓ 2. Escrow Active'}
+                </span>
+                <span style="color:${isLocked ? 'var(--color-accent);font-weight:700' : isTransferred || isCompleted ? 'var(--color-success)' : 'var(--color-text-muted)'}">
+                  ${isTransferred || isCompleted ? '✓ 3. Handover Confirmed' : '⏳ 3. Handover Awaiting You'}
+                </span>
+                <span style="color:${isCompleted ? 'var(--color-success);font-weight:700' : 'var(--color-text-muted)'}">
+                  ${isCompleted ? '✓ 4. Fully Completed' : '4. Final Settlement'}
+                </span>
+              </div>
+            </div>
+
+            ${isLocked ? `
+              <div class="alert alert-warning" style="margin-bottom:var(--space-md);font-size:0.85rem">
+                🛡️ <strong>Escrow Protected:</strong> Your funds are safely held in escrow. When you physically meet the seller and verify the vehicle, click the green button below to confirm receipt. Ownership will immediately transfer to you in the Digital Passport!
+              </div>
+            ` : ''}
+
+            ${isTransferred ? `
+              <div class="alert alert-success" style="margin-bottom:var(--space-md);font-size:0.85rem">
+                🎉 <strong>Ownership Transferred:</strong> You are now the officially recorded owner of this vehicle in the CarChain Digital Passport registry!
+              </div>
+            ` : ''}
+
+            <!-- Bottom Actions -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-md);border-top:1px solid var(--color-border);padding-top:var(--space-md)">
+              <div class="text-xs text-muted">
+                Order Placed: ${formatDate(tx.createdAt)}
+                ${tx.buyerNote ? ` | Your Note: "<em>${tx.buyerNote}</em>"` : ''}
+              </div>
+              <div style="display:flex;gap:var(--space-sm);align-items:center">
+                <a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">
+                  📋 View Digital Passport
+                </a>
+                ${isLocked ? `
+                  <button onclick="confirmVehicleHandover('${tx._id}')" class="btn btn-success btn-sm" id="btn-handover-${tx._id}" style="font-weight:700">
+                    🤝 Confirm Vehicle Received &amp; Transfer Title
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-danger">Failed to load purchases: ${err.message}</div>`;
+    }
+  }
+
+  async function confirmVehicleHandover(txId) {
+    if (!confirm('Are you sure you have received the vehicle and inspected its condition? This will officially transfer vehicle ownership to you and release funds to the seller.')) {
+      return;
+    }
+
+    const btn = document.getElementById(`btn-handover-${txId}`);
+    if (btn) ButtonHelper.setLoading(btn, true);
+
+    try {
+      const res = await CarChainAPI.Transactions.confirmHandover(txId, {
+        handoverNotes: 'Buyer inspected vehicle, confirmed keys and physical handover.',
+      });
+
+      Toast.success(res.message || 'Vehicle handover confirmed! Ownership successfully transferred!');
+      await loadBuyerPurchases();
+    } catch (err) {
+      Toast.error(err.message || 'Failed to confirm handover');
+    } finally {
+      if (btn) ButtonHelper.setLoading(btn, false, '🤝 Confirm Vehicle Received');
+    }
+  }
+
+  async function loadAdminStats() {
+    try {
+      const { stats } = await CarChainAPI.Admin.getStats();
+      const statCards = document.querySelectorAll('.stat-card-value');
+
+      // Calculate totals from userStats
+      const totalUsers = stats.userStats.reduce((sum, s) => sum + s.count, 0);
+      const pendingApprovals = stats.userStats.reduce((sum, s) => sum + (s.pending || 0), 0);
+      const activeListings = (stats.listingStats.find(l => l._id === 'active') || {}).count || 0;
+
+      if (statCards[0]) statCards[0].textContent = formatNumber(totalUsers);
+      if (statCards[1]) statCards[1].textContent = formatNumber(stats.vehicleCount);
+      if (statCards[2]) statCards[2].textContent = formatNumber(activeListings);
+      if (statCards[3]) statCards[3].textContent = formatNumber(pendingApprovals);
+    } catch (_) {
+      // Stats not available yet
+    }
+  }
+
+  // Sidebar mobile toggle
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+  });
+
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    document.getElementById('dashboard-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+
+  // Init
+  document.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+</body>
+</html>

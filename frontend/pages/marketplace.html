@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicle Marketplace – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/landing.css" />
+  <style>
+    .marketplace-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: var(--space-xl);
+      padding: var(--space-xl) 0 var(--space-3xl);
+    }
+    .filter-panel {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      height: fit-content;
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-md));
+    }
+    .filter-group { margin-bottom: var(--space-lg); }
+    .filter-title { font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--space-sm); }
+    .filter-option { display: flex; align-items: center; gap: var(--space-sm); padding: 5px 0; cursor: pointer; font-size: 0.875rem; color: var(--color-text-secondary); }
+    .filter-option input { accent-color: var(--color-accent); }
+    .filter-option:hover { color: var(--color-text-primary); }
+    .price-range { display: flex; gap: var(--space-sm); align-items: center; }
+    .price-input { flex: 1; padding: 0.5rem 0.75rem; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text-primary); font-size: 0.875rem; }
+    .marketplace-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); }
+    .sort-select { padding: 0.5rem 1rem; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); font-size: 0.875rem; cursor: pointer; }
+    .search-bar { display: flex; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .search-bar input { flex: 1; padding: 0.65rem 1rem; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); font-size: 0.9rem; }
+    .search-bar input:focus { outline: none; border-color: var(--color-accent); }
+    .empty-state { text-align: center; padding: var(--space-3xl); background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+    .vehicle-card-img-wrap { width: 100%; height: 210px; overflow: hidden; background: #131b2c; position: relative; }
+    .vehicle-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition-base); }
+    .vehicle-card:hover .vehicle-card-img-wrap img { transform: scale(1.04); }
+    .passport-pill { position: absolute; bottom: 8px; left: 8px; background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--color-accent); padding: 3px 8px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .passport-pill.verified { border-color: rgba(34, 197, 94, 0.3); color: var(--color-success); }
+    @media (max-width: 1024px) {
+      .marketplace-layout { grid-template-columns: 1fr; }
+      .filter-panel { position: static; display: none; }
+      .filter-panel.open { display: block; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="../index.html" class="navbar-brand">
+      <div class="brand-icon">⛓</div>
+      Car<span class="brand-chain">Chain</span>
+    </a>
+    <ul class="navbar-nav" id="main-nav">
+      <li><a href="../index.html" class="nav-link">Home</a></li>
+      <li><a href="marketplace.html" class="nav-link active">Marketplace</a></li>
+    </ul>
+    <div class="navbar-actions" id="navbar-actions">
+      <a href="login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="register.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+    <button class="navbar-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container">
+    <!-- Page Title -->
+    <div style="padding:var(--space-xl) 0 0">
+      <h1 style="font-size:1.75rem">Vehicle Marketplace</h1>
+      <p style="margin-top:4px">Browse verified vehicles with authentic, tamper-evident digital passports</p>
+    </div>
+
+    <div class="marketplace-layout">
+      <!-- Filters -->
+      <aside class="filter-panel" id="filter-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg)">
+          <h3 style="font-size:1rem">Filters</h3>
+          <button onclick="clearFilters()" style="background:none;border:none;color:var(--color-accent);font-size:0.8rem;cursor:pointer;font-weight:600">Clear All</button>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Price Range (USD)</div>
+          <div class="price-range">
+            <input type="number" class="price-input" id="minPrice" placeholder="Min $" min="0" step="1000" />
+            <span style="color:var(--color-text-muted)">—</span>
+            <input type="number" class="price-input" id="maxPrice" placeholder="Max $" min="0" step="1000" />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Vehicle Body Type</div>
+          <label class="filter-option"><input type="checkbox" value="sedan" name="bodyType"> Sedan</label>
+          <label class="filter-option"><input type="checkbox" value="suv" name="bodyType"> SUV</label>
+          <label class="filter-option"><input type="checkbox" value="coupe" name="bodyType"> Coupe</label>
+          <label class="filter-option"><input type="checkbox" value="wagon" name="bodyType"> Wagon</label>
+          <label class="filter-option"><input type="checkbox" value="hatchback" name="bodyType"> Hatchback</label>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Fuel Type</div>
+          <label class="filter-option"><input type="checkbox" value="gasoline" name="fuelType"> Gasoline</label>
+          <label class="filter-option"><input type="checkbox" value="hybrid" name="fuelType"> Hybrid</label>
+          <label class="filter-option"><input type="checkbox" value="electric" name="fuelType"> Electric</label>
+          <label class="filter-option"><input type="checkbox" value="diesel" name="fuelType"> Diesel</label>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Manufacturing Year</div>
+          <div class="price-range">
+            <input type="number" class="price-input" id="minYear" placeholder="From" min="1990" max="2026" />
+            <span style="color:var(--color-text-muted)">—</span>
+            <input type="number" class="price-input" id="maxYear" placeholder="To" min="1990" max="2026" />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Transmission</div>
+          <label class="filter-option"><input type="checkbox" value="automatic" name="transmission"> Automatic</label>
+          <label class="filter-option"><input type="checkbox" value="manual" name="transmission"> Manual</label>
+        </div>
+
+        <button onclick="applyFilters()" class="btn btn-primary btn-full" style="margin-top:var(--space-md)">Apply Filters</button>
+      </aside>
+
+      <!-- Main area -->
+      <div>
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="Search by brand, model, or keywords..." value="" />
+          <button onclick="applyFilters()" class="btn btn-primary">🔍 Search</button>
+          <button onclick="toggleFilters()" class="btn btn-secondary" id="filter-toggle-btn" style="display:none">⚙️ Filters</button>
+        </div>
+
+        <div class="marketplace-header">
+          <div id="result-count" style="font-size:0.9rem;color:var(--color-text-muted)">Loading vehicles...</div>
+          <select class="sort-select" id="sort-select" onchange="applyFilters()">
+            <option value="-createdAt">Newest First</option>
+            <option value="price">Price: Low to High</option>
+            <option value="-price">Price: High to Low</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+        <div class="vehicles-grid" id="vehicles-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <div id="pagination-container" style="display:flex;justify-content:center;margin-top:var(--space-xl);gap:var(--space-xs)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let currentPage = 1;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('q')) document.getElementById('search-input').value = params.get('q');
+    if (params.get('bodyType')) {
+      const cb = document.querySelector(`input[name="bodyType"][value="${params.get('bodyType')}"]`);
+      if (cb) cb.checked = true;
+    }
+    if (params.get('maxPrice')) document.getElementById('maxPrice').value = params.get('maxPrice');
+
+    loadListings(1);
+
+    if (window.innerWidth <= 1024) {
+      document.getElementById('filter-toggle-btn').style.display = 'flex';
+    }
+
+    document.getElementById('search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') applyFilters();
+    });
+  });
+
+  function toggleFilters() {
+    document.getElementById('filter-panel').classList.toggle('open');
+  }
+
+  function clearFilters() {
+    document.getElementById('search-input').value = '';
+    document.querySelectorAll('.filter-panel input').forEach(i => {
+      if (i.type === 'checkbox') i.checked = false;
+      else i.value = '';
+    });
+    loadListings(1);
+  }
+
+  function applyFilters() {
+    loadListings(1);
+  }
+
+  async function loadListings(page = 1) {
+    currentPage = page;
+    const grid = document.getElementById('vehicles-grid');
+    grid.innerHTML = Array(6).fill(`
+      <div class="vehicle-card">
+        <div class="vehicle-card-img-wrap skeleton"></div>
+        <div class="vehicle-card-body">
+          <div class="skeleton" style="height:20px;width:75%;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:14px;width:50%;margin-bottom:12px"></div>
+          <div class="skeleton" style="height:30px;width:100%"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Collect query params
+    const q = document.getElementById('search-input').value.trim();
+    const minPrice = document.getElementById('minPrice').value;
+    const maxPrice = document.getElementById('maxPrice').value;
+    const minYear = document.getElementById('minYear').value;
+    const maxYear = document.getElementById('maxYear').value;
+    const sort = document.getElementById('sort-select').value;
+
+    const bodyTypes = Array.from(document.querySelectorAll('input[name="bodyType"]:checked')).map(cb => cb.value);
+    const fuelTypes = Array.from(document.querySelectorAll('input[name="fuelType"]:checked')).map(cb => cb.value);
+    const transmissions = Array.from(document.querySelectorAll('input[name="transmission"]:checked')).map(cb => cb.value);
+
+    const params = { page, limit: 9, sort };
+    if (q) params.q = q;
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+    if (minYear) params.minYear = minYear;
+    if (maxYear) params.maxYear = maxYear;
+    if (bodyTypes.length === 1) params.bodyType = bodyTypes[0];
+    if (fuelTypes.length === 1) params.fuelType = fuelTypes[0];
+    if (transmissions.length === 1) params.transmission = transmissions[0];
+
+    try {
+      const response = await CarChainAPI.Listings.getAll(params);
+      const { listings, total, pages } = response;
+
+      document.getElementById('result-count').textContent = `Showing ${listings.length} of ${total} available vehicle${total === 1 ? '' : 's'}`;
+
+      if (!listings || listings.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div style="font-size:3rem;margin-bottom:var(--space-md)">🔍</div>
+            <h3 style="margin-bottom:var(--space-sm)">No Vehicles Match Your Search</h3>
+            <p style="margin-bottom:var(--space-lg);color:var(--color-text-muted)">Try adjusting your filters or search keywords.</p>
+            <button onclick="clearFilters()" class="btn btn-secondary btn-sm">Reset All Filters</button>
+          </div>
+        `;
+        document.getElementById('pagination-container').innerHTML = '';
+        return;
+      }
+
+      grid.innerHTML = listings.map(l => {
+        const v = l.vehicle;
+        if (!v) return '';
+        const imgUrl = (v.images && v.images[0]?.url) || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80';
+        const isVerified = v.passportStatus === 'verified';
+
+        return `
+          <div class="vehicle-card" onclick="window.location.href='vehicle-details.html?id=${l._id}'">
+            <div class="vehicle-card-img-wrap">
+              <img src="${imgUrl}" alt="${v.year} ${v.make} ${v.model}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'"/>
+              <div class="passport-pill ${isVerified ? 'verified' : ''}">
+                ${isVerified ? '🛡️ Passport Verified' : '📋 Digital Passport'}
+              </div>
+            </div>
+            <div class="vehicle-card-body">
+              <div>
+                <div class="vehicle-card-title">${v.year} ${v.make} ${v.model}</div>
+                <div class="vehicle-card-subtitle">${v.variant || v.bodyType.toUpperCase()} · ${l.location?.city ? l.location.city + ', ' + (l.location.country || '') : 'Verified Seller'}</div>
+              </div>
+              <div class="vehicle-card-specs">
+                <span class="spec-item"><span class="spec-icon">📅</span> ${v.year}</span>
+                <span class="spec-item"><span class="spec-icon">📏</span> ${v.currentMileage.toLocaleString()} ${v.mileageUnit}</span>
+                <span class="spec-item"><span class="spec-icon">⚡</span> ${v.fuelType.charAt(0).toUpperCase() + v.fuelType.slice(1)}</span>
+                <span class="spec-item"><span class="spec-icon">⚙️</span> ${v.transmission.charAt(0).toUpperCase() + v.transmission.slice(1)}</span>
+              </div>
+              <div class="vehicle-card-footer" onclick="event.stopPropagation()">
+                <div class="vehicle-price">${formatCurrency(l.price, l.currency)}</div>
+                <div style="display:flex;gap:6px">
+                  <a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm" title="Inspect Digital Passport">🛡️ Passport</a>
+                  <a href="vehicle-details.html?id=${l._id}" class="btn btn-primary btn-sm">Details →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderPagination(pages, page);
+
+    } catch (err) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div style="font-size:3rem;margin-bottom:var(--space-md)">⚠️</div>
+          <h3 style="margin-bottom:var(--space-sm)">Failed to Load Listings</h3>
+          <p style="margin-bottom:var(--space-lg);color:var(--color-danger)">${err.message}</p>
+          <button onclick="loadListings(${page})" class="btn btn-primary btn-sm">Retry</button>
+        </div>
+      `;
+    }
+  }
+
+  function renderPagination(totalPages, activePage) {
+    const container = document.getElementById('pagination-container');
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = `<button class="page-btn" ${activePage <= 1 ? 'disabled' : ''} onclick="loadListings(${activePage - 1})">‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === activePage ? 'active' : ''}" onclick="loadListings(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" ${activePage >= totalPages ? 'disabled' : ''} onclick="loadListings(${activePage + 1})">›</button>`;
+    container.innerHTML = html;
+  }
+</script>
+</body>
+</html>

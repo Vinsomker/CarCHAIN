@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seller Dashboard – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div style="display:flex;align-items:center;gap:var(--space-md);">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <a href="../index.html" class="navbar-brand">
+        <div class="brand-icon">⛓</div>
+        Car<span class="brand-chain">Chain</span>
+        <span class="badge badge-accent" style="margin-left:4px; font-size:0.65rem;">Seller Studio</span>
+      </a>
+    </div>
+    <div class="navbar-actions">
+      <a href="marketplace.html" class="btn btn-secondary btn-sm">Marketplace</a>
+      <button onclick="logout()" class="btn btn-primary btn-sm">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Dashboard Layout ───────────────────────────────────────────────────── -->
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboard-sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar">S</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Seller</div>
+        <div class="sidebar-user-role">Vehicle Seller</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Seller Studio</span>
+      <a href="#overview" class="sidebar-link active" onclick="showTab('overview')">
+        <span class="sidebar-link-icon">🏠</span> Overview
+      </a>
+      <a href="#escrow" class="sidebar-link" onclick="showTab('escrow')">
+        <span class="sidebar-link-icon">🔐</span> Escrow Orders
+      </a>
+      <a href="#listings" class="sidebar-link" onclick="showTab('listings')">
+        <span class="sidebar-link-icon">📋</span> My Listings
+      </a>
+      <a href="#vehicles" class="sidebar-link" onclick="showTab('vehicles')">
+        <span class="sidebar-link-icon">🚗</span> Registered Vehicles
+      </a>
+      <a href="marketplace.html" class="sidebar-link">
+        <span class="sidebar-link-icon">🔍</span> Marketplace
+      </a>
+      <a href="#profile" class="sidebar-link" onclick="showTab('profile')">
+        <span class="sidebar-link-icon">👤</span> Profile &amp; Wallet
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="btn btn-secondary btn-sm btn-full">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="dashboard-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Seller Dashboard</h1>
+          <p>Register vehicles, issue digital passports, and manage marketplace listings</p>
+        </div>
+        <div class="page-header-actions" style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="openRegisterVehicleModal()">+ Register Vehicle</button>
+          <button class="btn btn-primary btn-sm" onclick="openCreateListingModal()">+ Create Listing</button>
+        </div>
+      </div>
+
+      <!-- Welcome Banner -->
+      <div id="welcome-banner" style="display:none" class="card" style="margin-bottom:var(--space-xl); background:var(--color-accent-light); border-color:rgba(59,130,246,0.3);">
+        <div style="display:flex;align-items:center;gap:var(--space-lg);">
+          <div style="font-size:2.5rem;">🎉</div>
+          <div>
+            <h3 style="margin-bottom:var(--space-xs);">Welcome to CarChain Seller Studio!</h3>
+            <p>Your seller account is ready. Start by registering your vehicle or creating your first marketplace listing.</p>
+          </div>
+          <button onclick="document.getElementById('welcome-banner').style.display='none'" style="margin-left:auto; background:none; border:none; font-size:1.3rem; color:var(--color-text-muted); cursor:pointer;">✕</button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Active Listings</span>
+            <div class="stat-card-icon blue">📋</div>
+          </div>
+          <div class="stat-card-value" id="stat-active-listings">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Registered Vehicles</span>
+            <div class="stat-card-icon green">🚗</div>
+          </div>
+          <div class="stat-card-value" id="stat-registered-vehicles">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Total Views</span>
+            <div class="stat-card-icon yellow">👁</div>
+          </div>
+          <div class="stat-card-value" id="stat-total-views">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Inventory Value</span>
+            <div class="stat-card-icon red">💰</div>
+          </div>
+          <div class="stat-card-value" id="stat-inventory-value">$0</div>
+        </div>
+      </div>
+
+      <!-- Section: Escrow Orders & Sales -->
+      <div class="data-table-wrapper" id="section-escrow" style="margin-bottom:var(--space-2xl)">
+        <div class="data-table-header">
+          <div>
+            <h3 class="data-table-title" style="display:flex;align-items:center;gap:8px">
+              🔐 Incoming Escrow Orders &amp; Vehicle Sales
+            </h3>
+            <p class="text-xs text-muted">Buyer funds are held in Escrow. Once the buyer confirms handover, funds can be finalized and disbursed.</p>
+          </div>
+        </div>
+        <div id="escrow-orders-body" style="padding:var(--space-md)">
+          <div class="skeleton" style="height:100px;border-radius:var(--radius-md)"></div>
+        </div>
+      </div>
+
+      <!-- Section: My Listings -->
+      <div class="data-table-wrapper" id="section-listings" style="margin-bottom:var(--space-2xl)">
+        <div class="data-table-header">
+          <h3 class="data-table-title">My Vehicle Listings</h3>
+          <button class="btn btn-primary btn-sm" onclick="openCreateListingModal()">+ New Listing</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Views</th>
+                <th>Date Listed</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listings-table-body">
+              <tr>
+                <td colspan="6" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">Loading your listings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section: Registered Vehicles -->
+      <div class="data-table-wrapper" id="section-vehicles" style="margin-bottom:var(--space-2xl)">
+        <div class="data-table-header">
+          <h3 class="data-table-title">My Registered Vehicles (Digital Passports)</h3>
+          <button class="btn btn-secondary btn-sm" onclick="openRegisterVehicleModal()">+ Register Vehicle</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle / VIN</th>
+                <th>Mileage</th>
+                <th>Passport Status</th>
+                <th>Active Listing</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicles-table-body">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">Loading registered vehicles...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div class="card" id="section-profile">
+        <h3 style="margin-bottom:var(--space-lg)">Seller Profile</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Full Name</div>
+            <div class="info-value" id="profile-name">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value" id="profile-email">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Business / Dealership</div>
+            <div class="info-value" id="profile-business">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Account Role</div>
+            <div class="info-value"><span class="badge badge-accent">Seller</span></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Wallet Address</div>
+            <div class="info-value text-muted" id="profile-wallet" style="font-size:0.85rem">
+              Not connected — MetaMask integration coming in Phase 4
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ── Modal: Register New Vehicle ─────────────────────────────────────────── -->
+<div id="register-vehicle-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; overflow-y:auto; padding:var(--space-md)">
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)" onclick="closeRegisterVehicleModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg)">
+      <h3 style="display:flex;align-items:center;gap:8px">🚗 Register Vehicle &amp; Generate Passport</h3>
+      <button onclick="closeRegisterVehicleModal()" style="background:none;border:none;font-size:1.3rem;color:var(--color-text-muted);cursor:pointer">✕</button>
+    </div>
+
+    <form id="register-vehicle-form" onsubmit="handleRegisterVehicle(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">VIN (17 Characters) <span class="required">*</span></label>
+          <input type="text" name="vin" class="form-control" placeholder="e.g. WBA33AY08NFP28914" maxlength="17" required style="font-family:var(--font-mono); text-transform:uppercase" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Manufacturing Year <span class="required">*</span></label>
+          <input type="number" name="year" class="form-control" placeholder="2023" min="1900" max="2026" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Make <span class="required">*</span></label>
+          <input type="text" name="make" class="form-control" placeholder="e.g. BMW, Porsche, Tesla" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model <span class="required">*</span></label>
+          <input type="text" name="model" class="form-control" placeholder="e.g. M340i, 911 Carrera" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Current Odometer (km) <span class="required">*</span></label>
+          <input type="number" name="currentMileage" class="form-control" placeholder="28400" min="0" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Body Type <span class="required">*</span></label>
+          <select name="bodyType" class="form-control" required>
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="coupe">Coupe</option>
+            <option value="wagon">Wagon</option>
+            <option value="hatchback">Hatchback</option>
+            <option value="convertible">Convertible</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fuel Type <span class="required">*</span></label>
+          <select name="fuelType" class="form-control" required>
+            <option value="gasoline">Gasoline</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="electric">Electric</option>
+            <option value="diesel">Diesel</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transmission <span class="required">*</span></label>
+          <select name="transmission" class="form-control" required>
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="text" name="color" class="form-control" placeholder="e.g. Metallic Black" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Registration Country</label>
+          <input type="text" name="registrationCountry" class="form-control" placeholder="e.g. Germany, USA" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo Image URL</label>
+        <input type="url" name="imageUrl" class="form-control" placeholder="https://images.unsplash.com/..." />
+        <div class="form-hint">Paste an image link or leave blank for automatic placeholder.</div>
+      </div>
+
+      <div style="display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-lg)">
+        <button type="button" onclick="closeRegisterVehicleModal()" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-vehicle">Register &amp; Create Passport</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Modal: Create Marketplace Listing ───────────────────────────────────── -->
+<div id="create-listing-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; overflow-y:auto; padding:var(--space-md)">
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)" onclick="closeCreateListingModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:580px;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg)">
+      <h3 style="display:flex;align-items:center;gap:8px">📋 Create Marketplace Listing</h3>
+      <button onclick="closeCreateListingModal()" style="background:none;border:none;font-size:1.3rem;color:var(--color-text-muted);cursor:pointer">✕</button>
+    </div>
+
+    <form id="create-listing-form" onsubmit="handleCreateListing(event)">
+      <div class="form-group">
+        <label class="form-label">Select Registered Vehicle <span class="required">*</span></label>
+        <select name="vehicleId" id="listing-vehicle-select" class="form-control" required>
+          <option value="">-- Choose a registered vehicle --</option>
+        </select>
+        <div class="form-hint">Only vehicles you own without an active listing are shown.</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Asking Price (USD) <span class="required">*</span></label>
+          <input type="number" name="price" class="form-control" placeholder="e.g. 45000" min="0" step="500" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">City, Country</label>
+          <input type="text" name="city" class="form-control" placeholder="e.g. Munich, Germany" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Listing Headline</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. 2023 BMW M340i – Clean Title, Single Owner" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="4" placeholder="Highlight vehicle condition, packages, and why buyers should trust this car..."></textarea>
+      </div>
+
+      <div style="display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-lg)">
+        <button type="button" onclick="closeCreateListingModal()" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-listing">Publish Listing</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/vendor/ethers.umd.min.js"></script>
+<script src="../contracts/deployedAddresses.js"></script>
+<script src="../contracts/abis.js"></script>
+<script src="../js/web3.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let myVehicles = [];
+  let myListings = [];
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!requireAuth(['seller', 'admin'])) return;
+
+    const user = CarChainAPI.SessionManager.getUser();
+    if (user) {
+      document.getElementById('sidebar-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('sidebar-avatar').textContent = getInitials(user.firstName, user.lastName);
+      document.getElementById('profile-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('profile-email').textContent = user.email;
+      document.getElementById('profile-business').textContent = user.businessName || 'Independent Seller';
+      if (user.walletAddress) {
+        document.getElementById('profile-wallet').textContent = user.walletAddress;
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('welcome') === '1') {
+      document.getElementById('welcome-banner').style.display = 'block';
+    }
+
+    await refreshDashboard();
+  });
+
+  async function refreshDashboard() {
+    try {
+      const [vehiclesRes, listingsRes] = await Promise.all([
+        CarChainAPI.Vehicles.getMyVehicles(),
+        CarChainAPI.Listings.getMyListings(),
+      ]);
+
+      myVehicles = vehiclesRes.vehicles || [];
+      myListings = listingsRes.listings || [];
+
+      // Update stat cards
+      const activeListings = myListings.filter(l => l.status === 'active').length;
+      const totalViews = myListings.reduce((sum, l) => sum + (l.viewCount || 0), 0);
+      const totalValue = myListings.filter(l => l.status === 'active').reduce((sum, l) => sum + (l.price || 0), 0);
+
+      document.getElementById('stat-active-listings').textContent = activeListings;
+      document.getElementById('stat-registered-vehicles').textContent = myVehicles.length;
+      document.getElementById('stat-total-views').textContent = formatNumber(totalViews);
+      document.getElementById('stat-inventory-value').textContent = formatCurrency(totalValue);
+
+      renderListingsTable(myListings);
+      renderVehiclesTable(myVehicles);
+      populateVehicleSelect();
+      await loadSellerSales();
+
+    } catch (err) {
+      Toast.error('Failed to load dashboard data: ' + err.message);
+    }
+  }
+
+  async function loadSellerSales() {
+    const container = document.getElementById('escrow-orders-body');
+    if (!container) return;
+
+    try {
+      const res = await CarChainAPI.Transactions.getMySales();
+      const sales = res.data || [];
+
+      if (sales.length === 0) {
+        container.innerHTML = `
+          <div class="table-empty">
+            <div class="table-empty-icon">🤝</div>
+            <p>No active escrow purchase orders for your vehicles yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = sales.map(tx => {
+        const v = tx.vehicle || {};
+        const isLocked = tx.status === 'funds_locked';
+        const isTransferred = tx.status === 'ownership_transferred';
+        const isCompleted = tx.status === 'completed';
+        const isRefunded = tx.status === 'refunded' || tx.status === 'cancelled';
+
+        const buyerName = tx.buyer
+          ? ((tx.buyer.firstName || '') + ' ' + (tx.buyer.lastName || '')).trim() || tx.buyer.name || 'Verified Buyer'
+          : 'Verified Buyer';
+
+        const txHashDisplay = tx.escrowTransactionHash
+          ? (typeof shortenAddress === 'function' ? shortenAddress(tx.escrowTransactionHash) : tx.escrowTransactionHash.substring(0, 10) + '...')
+          : '';
+
+        let statusBadge = '';
+        if (isLocked) {
+          statusBadge = '<span class="badge badge-warning">🔒 Funds Deposited &amp; Locked</span>';
+        } else if (isTransferred) {
+          statusBadge = '<span class="badge badge-success">🤝 Handover Confirmed by Buyer</span>';
+        } else if (isCompleted) {
+          statusBadge = '<span class="badge badge-success">💰 Funds Disbursed (Completed)</span>';
+        } else if (isRefunded) {
+          statusBadge = '<span class="badge badge-danger">↩️ Refunded / Cancelled</span>';
+        }
+
+        const mainImg = (v.images && v.images[0]?.url) || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=80';
+
+        return `
+          <div class="card" style="margin-bottom:var(--space-md);background:var(--color-bg-secondary);border-color:rgba(59,130,246,0.25)">
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-md);justify-content:space-between;align-items:center">
+              <div style="display:flex;align-items:center;gap:var(--space-md)">
+                <img src="${mainImg}" alt="${v.model || 'Vehicle'}" style="width:85px;height:60px;border-radius:var(--radius-md);object-fit:cover;border:1px solid var(--color-border)" />
+                <div>
+                  <h4 style="margin:0 0 4px 0">${v.year || ''} ${v.make || ''} ${v.model || 'Vehicle'}</h4>
+                  <div class="text-xs text-muted">
+                    Buyer: <strong>${buyerName}</strong> (${tx.buyer?.email || ''})
+                  </div>
+                  <div style="margin-top:4px;display:flex;gap:var(--space-xs);align-items:center">
+                    <span class="badge ${tx.isSimulated ? 'badge-muted' : 'badge-accent'}" style="font-size:0.7rem">
+                      ${tx.isSimulated ? '⚡ CarChain Escrow' : '🔗 Sepolia Web3 Escrow'}
+                    </span>
+                    ${txHashDisplay ? `<span class="text-xs font-mono text-muted">Tx: ${txHashDisplay}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style="text-align:right">
+                <div style="font-size:1.3rem;font-weight:800;color:var(--color-accent)">
+                  ${formatCurrency(tx.amount, tx.currency)}
+                </div>
+                <div style="margin-top:4px">${statusBadge}</div>
+              </div>
+            </div>
+
+            <div style="margin-top:var(--space-md);padding-top:var(--space-sm);border-top:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-sm)">
+              <div class="text-xs text-muted">
+                ${tx.buyerNote ? `Buyer Note: "<em>${tx.buyerNote}</em>"` : 'No special delivery instructions.'}
+              </div>
+              <div style="display:flex;gap:var(--space-xs)">
+                <a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">Passport</a>
+                ${isTransferred ? `
+                  <button onclick="finalizeSale('${tx._id}')" class="btn btn-success btn-sm" id="btn-finalize-${tx._id}">
+                    💰 Finalize &amp; Receive Funds
+                  </button>
+                ` : ''}
+                ${isLocked ? `
+                  <span class="text-xs text-muted" style="align-self:center">Awaiting buyer handover confirmation</span>
+                  <button onclick="cancelAndRefund('${tx._id}')" class="btn btn-secondary btn-sm">Cancel / Refund</button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-danger">Failed to load sales: ${err.message}</div>`;
+    }
+  }
+
+  async function finalizeSale(txId) {
+    const btn = document.getElementById(`btn-finalize-${txId}`);
+    if (btn) ButtonHelper.setLoading(btn, true);
+
+    try {
+      const res = await CarChainAPI.Transactions.complete(txId);
+      Toast.success(res.message || 'Sale finalized! Escrow funds released to you.');
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error(err.message || 'Failed to finalize sale');
+    } finally {
+      if (btn) ButtonHelper.setLoading(btn, false, '💰 Finalize & Receive Funds');
+    }
+  }
+
+  async function cancelAndRefund(txId) {
+    const reason = prompt('Please enter cancellation reason:');
+    if (!reason) return;
+
+    try {
+      const res = await CarChainAPI.Transactions.cancel(txId, { reason });
+      Toast.success(res.message || 'Order cancelled and buyer refunded.');
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error(err.message || 'Failed to cancel order');
+    }
+  }
+
+  function renderListingsTable(listings) {
+    const tbody = document.getElementById('listings-table-body');
+    if (!listings || listings.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="table-empty">
+            <div class="table-empty-icon">📋</div>
+            <p>You haven't listed any vehicles yet.</p>
+            <button onclick="openCreateListingModal()" class="btn btn-primary btn-sm" style="margin-top:var(--space-md)">+ Create Your First Listing</button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = listings.map(l => {
+      const v = l.vehicle;
+      const name = v ? `${v.year} ${v.make} ${v.model}` : l.title;
+      return `
+        <tr>
+          <td>
+            <strong>${name}</strong>
+            <div class="text-xs text-muted">VIN: ${v?.vin || '—'}</div>
+          </td>
+          <td><strong>${formatCurrency(l.price, l.currency)}</strong></td>
+          <td>${getStatusBadge(l.status)}</td>
+          <td>${l.viewCount || 0}</td>
+          <td class="text-muted">${formatDate(l.createdAt)}</td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <a href="vehicle-details.html?id=${l._id}" class="btn btn-secondary btn-sm">View</a>
+              ${v ? `<a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">Passport</a>` : ''}
+              <button onclick="deleteListing('${l._id}')" class="btn btn-danger btn-sm">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderVehiclesTable(vehicles) {
+    const tbody = document.getElementById('vehicles-table-body');
+    if (!vehicles || vehicles.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="table-empty">
+            <div class="table-empty-icon">🚗</div>
+            <p>No vehicles registered under your seller account.</p>
+            <button onclick="openRegisterVehicleModal()" class="btn btn-secondary btn-sm" style="margin-top:var(--space-md)">+ Register a Vehicle</button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = vehicles.map(v => `
+      <tr>
+        <td>
+          <strong>${v.year} ${v.make} ${v.model}</strong>
+          <div class="text-xs text-accent" style="font-family:var(--font-mono)">${v.vin}</div>
+        </td>
+        <td>${v.currentMileage.toLocaleString()} ${v.mileageUnit}</td>
+        <td>${getStatusBadge(v.passportStatus)}</td>
+        <td>${v.activeListing ? '<span class="badge badge-success">Actively Listed</span>' : '<span class="badge badge-muted">Unlisted</span>'}</td>
+        <td>
+          <div style="display:flex;gap:4px">
+            <a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">🛡️ View Passport</a>
+            ${!v.activeListing ? `<button onclick="quickListVehicle('${v._id}')" class="btn btn-primary btn-sm">+ List</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function populateVehicleSelect() {
+    const select = document.getElementById('listing-vehicle-select');
+    const unlisted = myVehicles.filter(v => !v.activeListing);
+    select.innerHTML = '<option value="">-- Choose a registered vehicle --</option>' + 
+      unlisted.map(v => `<option value="${v._id}">${v.year} ${v.make} ${v.model} (VIN: ${v.vin})</option>`).join('');
+  }
+
+  function openRegisterVehicleModal() {
+    document.getElementById('register-vehicle-form').reset();
+    document.getElementById('register-vehicle-modal').style.display = 'flex';
+  }
+  function closeRegisterVehicleModal() {
+    document.getElementById('register-vehicle-modal').style.display = 'none';
+  }
+
+  function openCreateListingModal() {
+    document.getElementById('create-listing-form').reset();
+    populateVehicleSelect();
+    document.getElementById('create-listing-modal').style.display = 'flex';
+  }
+  function closeCreateListingModal() {
+    document.getElementById('create-listing-modal').style.display = 'none';
+  }
+
+  function quickListVehicle(vehicleId) {
+    openCreateListingModal();
+    document.getElementById('listing-vehicle-select').value = vehicleId;
+  }
+
+  async function handleRegisterVehicle(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('btn-submit-vehicle');
+    ButtonHelper.setLoading(btn, true);
+
+    const data = FormHelper.serialize(form);
+    const payload = {
+      vin: data.vin,
+      make: data.make,
+      model: data.model,
+      year: Number(data.year),
+      currentMileage: Number(data.currentMileage),
+      bodyType: data.bodyType,
+      fuelType: data.fuelType,
+      transmission: data.transmission,
+      color: data.color || '',
+      registrationCountry: data.registrationCountry || '',
+      images: data.imageUrl ? [{ url: data.imageUrl, isPrimary: true }] : [],
+    };
+
+    try {
+      await CarChainAPI.Vehicles.create(payload);
+      Toast.success('Vehicle registered & digital passport created!');
+      closeRegisterVehicleModal();
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error('Registration failed: ' + err.message);
+    } finally {
+      ButtonHelper.setLoading(btn, false, 'Register & Create Passport');
+    }
+  }
+
+  async function handleCreateListing(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('btn-submit-listing');
+    ButtonHelper.setLoading(btn, true);
+
+    const data = FormHelper.serialize(form);
+    const payload = {
+      vehicleId: data.vehicleId,
+      price: Number(data.price),
+      title: data.title || '',
+      description: data.description || '',
+      location: { city: data.city || '' },
+    };
+
+    try {
+      await CarChainAPI.Listings.create(payload);
+      Toast.success('Vehicle listed successfully in marketplace!');
+      closeCreateListingModal();
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error('Failed to create listing: ' + err.message);
+    } finally {
+      ButtonHelper.setLoading(btn, false, 'Publish Listing');
+    }
+  }
+
+  async function deleteListing(id) {
+    if (!confirm('Are you sure you want to remove this listing from the marketplace?')) return;
+    try {
+      await CarChainAPI.Listings.delete(id);
+      Toast.success('Listing removed.');
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error('Delete failed: ' + err.message);
+    }
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    event.currentTarget?.classList.add('active');
+  }
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+  });
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    document.getElementById('dashboard-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+</script>
+</body>
+</html>

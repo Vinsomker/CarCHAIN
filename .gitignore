@@ -1,0 +1,48 @@
+# =============================================================================
+# CarChain .gitignore
+# =============================================================================
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & Secrets (NEVER push private keys or DB passwords!)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Hardhat & Solidity build cache & artifacts
+blockchain/cache/
+blockchain/artifacts/
+cache/
+artifacts/
+
+# Local Database Files (MongoDB wiredTiger & diagnostic data)
+data/
+*.lock
+*.log
+
+# Backend uploaded files (keep directory empty or gitkeep)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak

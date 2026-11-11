@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- Mobile Nav -->
+<nav class="auth-mobile-nav">
+  <a href="../index.html" class="auth-logo">
+    <div class="brand-icon">⛓</div>
+    Car<span style="color:var(--color-accent)">Chain</span>
+  </a>
+</nav>
+
+<div class="auth-page">
+
+  <!-- ── Left Visual Panel ─────────────────────────────────────────────────── -->
+  <div class="auth-visual">
+    <a href="../index.html" class="auth-logo">
+      <div class="brand-icon">⛓</div>
+      Car<span style="color:var(--color-accent)">Chain</span>
+    </a>
+
+    <div class="auth-visual-content">
+      <h2 class="auth-visual-title">Join the Future of Vehicle Transactions</h2>
+      <p class="auth-visual-desc">
+        Choose your role and start benefiting from blockchain-powered vehicle transparency today.
+      </p>
+
+      <div class="auth-visual-features">
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">🛒</div>
+          <div class="auth-feature-text">
+            <h4>Buyer</h4>
+            <p>Browse verified vehicles and buy with complete confidence</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">🏷️</div>
+          <div class="auth-feature-text">
+            <h4>Seller</h4>
+            <p>List your vehicles and showcase their verified history</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">🔧</div>
+          <div class="auth-feature-text">
+            <h4>Certified Garage / Inspector</h4>
+            <p>Issue trusted maintenance records and inspection certificates</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-visual-footer">
+      © 2024 CarChain — Building trust in automotive transactions
+    </div>
+  </div>
+
+  <!-- ── Right Form Panel ───────────────────────────────────────────────────── -->
+  <div class="auth-form-panel">
+    <div class="auth-form-container">
+      <div class="auth-form-header">
+        <h1>Create Account</h1>
+        <p>Join CarChain and start buying or selling with confidence</p>
+      </div>
+
+      <div id="server-status" style="display:none;" class="alert alert-warning" role="alert">
+        ⚠️ Cannot connect to server. Make sure the backend is running on port 5000.
+      </div>
+
+      <form id="register-form" action="javascript:void(0);" method="POST" novalidate>
+
+        <!-- Role Selection -->
+        <div class="form-group">
+          <label class="form-label">I want to join as <span class="required">*</span></label>
+          <div class="role-grid" role="radiogroup" aria-label="Account type">
+            <div class="role-card">
+              <input type="radio" name="role" id="role-buyer" value="buyer" checked />
+              <label class="role-card-label" for="role-buyer">
+                <span class="role-icon">🛒</span>
+                <span class="role-name">Buyer</span>
+                <span class="role-desc">Browse &amp; purchase vehicles</span>
+              </label>
+            </div>
+            <div class="role-card">
+              <input type="radio" name="role" id="role-seller" value="seller" />
+              <label class="role-card-label" for="role-seller">
+                <span class="role-icon">🏷️</span>
+                <span class="role-name">Seller</span>
+                <span class="role-desc">List &amp; sell vehicles</span>
+              </label>
+            </div>
+            <div class="role-card">
+              <input type="radio" name="role" id="role-garage" value="garage" />
+              <label class="role-card-label" for="role-garage">
+                <span class="role-icon">🔧</span>
+                <span class="role-name">Garage</span>
+                <span class="role-desc">Add maintenance records</span>
+              </label>
+            </div>
+            <div class="role-card">
+              <input type="radio" name="role" id="role-inspector" value="inspector" />
+              <label class="role-card-label" for="role-inspector">
+                <span class="role-icon">📋</span>
+                <span class="role-name">Inspector</span>
+                <span class="role-desc">Issue inspection certs</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Business notice (for garage/inspector) -->
+        <div class="business-fields" id="business-notice">
+          <div class="business-fields-notice">
+            <span>⚠️</span>
+            <span>Garage and Inspector accounts require administrator approval before you can submit verified records. You will be notified once approved.</span>
+          </div>
+          <div class="form-group" style="margin-bottom:var(--space-sm)">
+            <label class="form-label" for="businessName">Business Name <span class="required">*</span></label>
+            <input type="text" id="businessName" name="businessName" class="form-control" placeholder="Your garage or inspection company name" />
+            <div class="form-error" id="businessName-error"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" for="businessLicense">Business License Number</label>
+            <input type="text" id="businessLicense" name="businessLicense" class="form-control" placeholder="Optional — your official license number" />
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="firstName">First Name <span class="required">*</span></label>
+            <input type="text" id="firstName" name="firstName" class="form-control" placeholder="John" autocomplete="given-name" required />
+            <div class="form-error" id="firstName-error"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="lastName">Last Name <span class="required">*</span></label>
+            <input type="text" id="lastName" name="lastName" class="form-control" placeholder="Doe" autocomplete="family-name" required />
+            <div class="form-error" id="lastName-error"></div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address <span class="required">*</span></label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" autocomplete="email" required />
+          <div class="form-error" id="email-error"></div>
+        </div>
+
+        <!-- Phone (optional) -->
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" class="form-control" placeholder="+1 234 567 8900" autocomplete="tel" />
+          <div class="form-hint">Optional — used for buyer/seller contact</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password <span class="required">*</span></label>
+          <div class="input-with-action">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-control"
+              placeholder="Minimum 8 characters"
+              autocomplete="new-password"
+              required
+            />
+            <button type="button" class="input-action-btn" id="toggle-password" aria-label="Toggle password visibility">👁</button>
+          </div>
+          <div class="password-strength" id="strength-bars">
+            <div class="strength-bar" id="bar-1"></div>
+            <div class="strength-bar" id="bar-2"></div>
+            <div class="strength-bar" id="bar-3"></div>
+            <div class="strength-bar" id="bar-4"></div>
+          </div>
+          <div class="strength-label" id="strength-label"></div>
+          <div class="form-error" id="password-error"></div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm Password <span class="required">*</span></label>
+          <div class="input-with-action">
+            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Repeat your password" autocomplete="new-password" required />
+            <button type="button" class="input-action-btn" id="toggle-confirm" aria-label="Toggle password visibility">👁</button>
+          </div>
+          <div class="form-error" id="confirmPassword-error"></div>
+        </div>
+
+        <!-- Terms -->
+        <div class="terms-check">
+          <input type="checkbox" id="terms" name="terms" required />
+          <label for="terms">
+            I agree to CarChain's <a href="#" tabindex="-1">Terms of Service</a> and <a href="#" tabindex="-1">Privacy Policy</a>.
+            I understand that vehicle records are stored for transparency and cannot be deleted.
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="register-btn">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        Already have an account? <a href="login.html">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  // ── Redirect if already logged in ────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const { SessionManager } = CarChainAPI;
+    if (SessionManager.isLoggedIn()) {
+      window.location.href = getDashboardUrl(SessionManager.getRole());
+      return;
+    }
+    checkServer();
+  });
+
+  async function checkServer() {
+    try {
+      await CarChainAPI.Health.check();
+    } catch (_) {
+      document.getElementById('server-status').style.display = 'flex';
+    }
+  }
+
+  // ── Role selection ────────────────────────────────────────────────────────
+  const businessNotice = document.getElementById('business-notice');
+  document.querySelectorAll('input[name="role"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const role = radio.value;
+      if (['garage', 'inspector'].includes(role)) {
+        businessNotice.classList.add('visible');
+      } else {
+        businessNotice.classList.remove('visible');
+      }
+    });
+  });
+
+  // ── Password visibility toggles ───────────────────────────────────────────
+  ['toggle-password', 'toggle-confirm'].forEach(btnId => {
+    document.getElementById(btnId)?.addEventListener('click', function () {
+      const targetId = btnId === 'toggle-password' ? 'password' : 'confirmPassword';
+      const input = document.getElementById(targetId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      this.textContent = isHidden ? '🙈' : '👁';
+    });
+  });
+
+  // ── Password strength indicator ───────────────────────────────────────────
+  document.getElementById('password').addEventListener('input', function () {
+    const val = this.value;
+    const strength = getPasswordStrength(val);
+    updateStrengthUI(strength);
+  });
+
+  function getPasswordStrength(password) {
+    if (!password) return 0;
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  }
+
+  function updateStrengthUI(score) {
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+    const classes = ['', 'weak', 'fair', 'good', 'strong'];
+    const label = document.getElementById('strength-label');
+
+    for (let i = 1; i <= 4; i++) {
+      const bar = document.getElementById(`bar-${i}`);
+      bar.className = 'strength-bar';
+      if (i <= score) {
+        bar.classList.add('active', classes[score]);
+      }
+    }
+
+    label.textContent = score > 0 ? `Password strength: ${labels[score]}` : '';
+    label.style.color = score <= 1 ? 'var(--color-danger)' :
+                        score === 2 ? 'var(--color-warning)' :
+                        score === 3 ? 'var(--color-info)' : 'var(--color-success)';
+  }
+
+  // ── Form Submission ───────────────────────────────────────────────────────
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('register-btn');
+
+    FormHelper.clearErrors(form);
+
+    const data = FormHelper.serialize(form);
+    let hasError = false;
+
+    // Client-side validation
+    if (!data.firstName) { FormHelper.setFieldError(form.firstName, 'First name is required'); hasError = true; }
+    if (!data.lastName)  { FormHelper.setFieldError(form.lastName,  'Last name is required');  hasError = true; }
+    if (!data.email)     { FormHelper.setFieldError(form.email,     'Email is required');      hasError = true; }
+    if (!data.password)  { FormHelper.setFieldError(form.password,  'Password is required');   hasError = true; }
+
+    if (data.password && data.password.length < 8) {
+      FormHelper.setFieldError(form.password, 'Password must be at least 8 characters');
+      hasError = true;
+    }
+
+    if (data.password !== data.confirmPassword) {
+      FormHelper.setFieldError(form.confirmPassword, 'Passwords do not match');
+      hasError = true;
+    }
+
+    if (!data.terms) {
+      Toast.error('Please accept the Terms of Service to continue.');
+      hasError = true;
+    }
+
+    if (['garage', 'inspector'].includes(data.role) && !data.businessName) {
+      FormHelper.setFieldError(form.businessName, 'Business name is required for garage/inspector accounts');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    ButtonHelper.setLoading(btn, true);
+
+    try {
+      // Remove confirmPassword and terms from payload
+      const { confirmPassword, terms, ...payload } = data;
+
+      const result = await CarChainAPI.Auth.register(payload);
+
+      // Store token and user
+      CarChainAPI.TokenManager.set(result.token);
+      CarChainAPI.SessionManager.setUser(result.user);
+
+      Toast.success(result.message || 'Account created successfully!');
+
+      setTimeout(() => {
+        if (['garage', 'inspector'].includes(data.role)) {
+          // Pending approval — go to dashboard with info message
+          window.location.href = getDashboardUrl(data.role) + '?welcome=1&pending=1';
+        } else {
+          window.location.href = getDashboardUrl(data.role) + '?welcome=1';
+        }
+      }, 1000);
+
+    } catch (err) {
+      ButtonHelper.setLoading(btn, false, 'Create Account');
+      if (err.data?.errors) {
+        FormHelper.showErrors(err.data.errors, form);
+        Toast.error('Please fix the errors above.');
+      } else {
+        Toast.error(err.message || 'Registration failed. Please try again.');
+      }
+    }
+  });
+</script>
+</body>
+</html>

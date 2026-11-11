@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div style="display:flex;align-items:center;gap:var(--space-md);">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <a href="../index.html" class="navbar-brand">
+        <div class="brand-icon">⛓</div>
+        Car<span class="brand-chain">Chain</span>
+        <span class="badge badge-danger" style="margin-left:4px; font-size:0.65rem;">Admin</span>
+      </a>
+    </div>
+    <div class="navbar-actions">
+      <button onclick="logout()" class="btn btn-secondary btn-sm">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboard-sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar">A</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+        <div class="sidebar-user-role">Administrator</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Overview</span>
+      <a href="admin-dashboard.html" class="sidebar-link active">
+        <span class="sidebar-link-icon">🏠</span> Overview
+      </a>
+
+      <span class="sidebar-section-label">Management</span>
+      <a href="#users" class="sidebar-link" onclick="showSection('users')">
+        <span class="sidebar-link-icon">👥</span> Users
+      </a>
+      <a href="#approvals" class="sidebar-link" onclick="showSection('approvals')">
+        <span class="sidebar-link-icon">⏳</span> Pending Approvals
+        <span class="sidebar-badge" id="pending-badge">0</span>
+      </a>
+      <a href="#vehicles" class="sidebar-link" onclick="showSection('vehicles')">
+        <span class="sidebar-link-icon">🚗</span> Vehicles
+      </a>
+      <a href="#listings" class="sidebar-link" onclick="showSection('listings')">
+        <span class="sidebar-link-icon">📋</span> Listings
+      </a>
+
+      <span class="sidebar-section-label">System</span>
+      <a href="#settings" class="sidebar-link" onclick="showSection('settings')">
+        <span class="sidebar-link-icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="btn btn-secondary btn-sm btn-full">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="dashboard-content">
+
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Admin Dashboard</h1>
+          <p>Platform management and oversight</p>
+        </div>
+        <div class="page-header-actions">
+          <button onclick="refreshStats()" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Total Users</span>
+            <div class="stat-card-icon blue">👥</div>
+          </div>
+          <div class="stat-card-value" id="stat-users">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Registered Vehicles</span>
+            <div class="stat-card-icon green">🚗</div>
+          </div>
+          <div class="stat-card-value" id="stat-vehicles">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Active Listings</span>
+            <div class="stat-card-icon yellow">📋</div>
+          </div>
+          <div class="stat-card-value" id="stat-listings">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Pending Approvals</span>
+            <div class="stat-card-icon red">⏳</div>
+          </div>
+          <div class="stat-card-value" id="stat-pending">—</div>
+        </div>
+      </div>
+
+      <!-- Section content (tabs) -->
+      <div id="section-overview">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); margin-top:var(--space-xl)">
+          <!-- User breakdown -->
+          <div class="card">
+            <h3 style="margin-bottom:var(--space-lg)">User Breakdown</h3>
+            <div id="user-breakdown">
+              <div class="skeleton" style="height:120px; border-radius:var(--radius-md)"></div>
+            </div>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="card">
+            <h3 style="margin-bottom:var(--space-lg)">Platform Health</h3>
+            <div class="timeline" id="platform-health">
+              <div class="timeline-item">
+                <div class="timeline-dot accent"></div>
+                <div class="timeline-time">Now</div>
+                <div class="timeline-content">CarChain API is running</div>
+                <div class="timeline-detail">Phase 1 — Authentication deployed</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">Phase 2 (Coming)</div>
+                <div class="timeline-content">Vehicle Marketplace</div>
+                <div class="timeline-detail">Vehicle listings, search, filters</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">Phase 3 (Coming)</div>
+                <div class="timeline-content">Digital Passport & Records</div>
+                <div class="timeline-detail">Maintenance records, inspections</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">Phase 4 (Coming)</div>
+                <div class="timeline-content">Blockchain Integration</div>
+                <div class="timeline-detail">Smart contracts, escrow, MetaMask</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users section -->
+      <div id="section-users" style="display:none; margin-top:var(--space-xl)">
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <h3 class="data-table-title">All Users</h3>
+            <div class="data-table-actions">
+              <div class="table-search">
+                <span class="table-search-icon">🔍</span>
+                <input type="text" placeholder="Search users..." id="user-search" />
+              </div>
+              <select class="form-control" id="role-filter" style="width:auto;padding:0.45rem 0.75rem;font-size:0.875rem">
+                <option value="">All Roles</option>
+                <option value="buyer">Buyers</option>
+                <option value="seller">Sellers</option>
+                <option value="garage">Garages</option>
+                <option value="inspector">Inspectors</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">
+                    Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pagination">
+            <span id="user-pagination-info">—</span>
+            <div class="pagination-controls" id="user-pagination-controls"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approvals section -->
+      <div id="section-approvals" style="display:none; margin-top:var(--space-xl)">
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <h3 class="data-table-title">Pending Approvals (Garages & Inspectors)</h3>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Business</th>
+                  <th>Applied</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="approvals-table-body">
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">
+                    Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other sections placeholder -->
+      <div id="section-vehicles" style="display:none; margin-top:var(--space-xl)">
+        <div class="card" style="text-align:center;padding:var(--space-3xl)">
+          <div style="font-size:2.5rem;margin-bottom:var(--space-md)">🚗</div>
+          <h3>Vehicle Management</h3>
+          <p>Vehicle management will be available in Phase 2.</p>
+        </div>
+      </div>
+
+      <div id="section-listings" style="display:none; margin-top:var(--space-xl)">
+        <div class="card" style="text-align:center;padding:var(--space-3xl)">
+          <div style="font-size:2.5rem;margin-bottom:var(--space-md)">📋</div>
+          <h3>Listing Management</h3>
+          <p>Listing management will be available in Phase 2.</p>
+        </div>
+      </div>
+
+      <div id="section-settings" style="display:none; margin-top:var(--space-xl)">
+        <div class="card" style="text-align:center;padding:var(--space-3xl)">
+          <div style="font-size:2.5rem;margin-bottom:var(--space-md)">⚙️</div>
+          <h3>System Settings</h3>
+          <p>System settings will be available in a future phase.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Approve/Reject Modal -->
+<div id="action-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)" onclick="closeModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:440px;margin:var(--space-lg)">
+    <h3 id="modal-title" style="margin-bottom:var(--space-md)">Confirm Action</h3>
+    <p id="modal-desc" style="margin-bottom:var(--space-lg)"></p>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <textarea id="modal-note" class="form-control" rows="3" placeholder="Add a note for the user..."></textarea>
+    </div>
+    <div style="display:flex;gap:var(--space-sm);justify-content:flex-end">
+      <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+      <button id="modal-confirm-btn" class="btn btn-primary">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let currentUsersPage = 1;
+  let modalAction = null;
+  let modalUserId = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!requireAuth(['admin'])) return;
+
+    const user = CarChainAPI.SessionManager.getUser();
+    document.getElementById('sidebar-name').textContent = `${user.firstName} ${user.lastName}`;
+    document.getElementById('sidebar-avatar').textContent = getInitials(user.firstName, user.lastName);
+
+    await refreshStats();
+
+    // Check URL hash for section
+    const hash = window.location.hash.replace('#', '');
+    if (hash) showSection(hash);
+  });
+
+  async function refreshStats() {
+    try {
+      const { stats } = await CarChainAPI.Admin.getStats();
+
+      const totalUsers = stats.userStats.reduce((sum, s) => sum + s.count, 0);
+      const pendingApprovals = stats.userStats.reduce((sum, s) => sum + (s.pending || 0), 0);
+      const activeListings = (stats.listingStats.find(l => l._id === 'active') || {}).count || 0;
+
+      document.getElementById('stat-users').textContent = formatNumber(totalUsers);
+      document.getElementById('stat-vehicles').textContent = formatNumber(stats.vehicleCount);
+      document.getElementById('stat-listings').textContent = formatNumber(activeListings);
+      document.getElementById('stat-pending').textContent = formatNumber(pendingApprovals);
+      document.getElementById('pending-badge').textContent = pendingApprovals;
+
+      // Render user breakdown
+      const breakdownEl = document.getElementById('user-breakdown');
+      breakdownEl.innerHTML = stats.userStats.map(s => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:var(--space-sm) 0; border-bottom:1px solid var(--color-border-light)">
+          <div style="display:flex; align-items:center; gap:var(--space-sm)">
+            ${getRoleBadge(s._id)}
+          </div>
+          <div style="font-weight:700; color:var(--color-text-primary)">${s.count}</div>
+        </div>
+      `).join('') || '<p style="color:var(--color-text-muted)">No users yet.</p>';
+
+    } catch (err) {
+      Toast.error('Failed to load stats: ' + err.message);
+    }
+  }
+
+  function showSection(name) {
+    ['overview', 'users', 'approvals', 'vehicles', 'listings', 'settings'].forEach(s => {
+      document.getElementById(`section-${s}`).style.display = 'none';
+    });
+
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    const target = document.getElementById(`section-${name}`);
+    if (target) target.style.display = 'block';
+
+    if (name === 'users') loadUsers();
+    if (name === 'approvals') loadApprovals();
+  }
+
+  async function loadUsers(page = 1) {
+    currentUsersPage = page;
+    const role = document.getElementById('role-filter')?.value;
+    const params = { page, limit: 15 };
+    if (role) params.role = role;
+
+    try {
+      const { users, total, pages } = await CarChainAPI.Admin.getUsers(params);
+      renderUsersTable(users);
+      document.getElementById('user-pagination-info').textContent = `${users.length} of ${total} users`;
+      renderPagination('user-pagination-controls', page, pages, loadUsers);
+    } catch (err) {
+      Toast.error('Failed to load users: ' + err.message);
+    }
+  }
+
+  function renderUsersTable(users) {
+    const tbody = document.getElementById('users-table-body');
+    if (!users.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty"><div class="table-empty-icon">👥</div><p>No users found.</p></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:var(--space-sm)">
+            <div class="sidebar-avatar" style="width:32px;height:32px;font-size:0.8rem;flex-shrink:0">${getInitials(u.firstName, u.lastName)}</div>
+            <div>
+              <div style="font-weight:600">${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</div>
+              ${u.businessName ? `<div style="font-size:0.75rem;color:var(--color-text-muted)">${escapeHtml(u.businessName)}</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--color-text-secondary)">${escapeHtml(u.email)}</td>
+        <td>${getRoleBadge(u.role)}</td>
+        <td>${getStatusBadge(u.approvalStatus || 'approved')} ${u.isActive ? '' : '<span class="badge badge-muted">Inactive</span>'}</td>
+        <td style="color:var(--color-text-muted)">${formatDate(u.createdAt)}</td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            ${['garage','inspector'].includes(u.role) && u.approvalStatus === 'pending' ? `
+              <button onclick="openModal('approve','${u._id}','${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}')" class="btn btn-sm" style="background:var(--color-success-bg);color:var(--color-success);border:1px solid rgba(34,197,94,0.3)">Approve</button>
+              <button onclick="openModal('reject','${u._id}','${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}')" class="btn btn-sm" style="background:var(--color-danger-bg);color:var(--color-danger);border:1px solid rgba(239,68,68,0.3)">Reject</button>
+            ` : ''}
+            <button onclick="toggleActive('${u._id}', ${u.isActive})" class="btn btn-secondary btn-sm">${u.isActive ? 'Deactivate' : 'Activate'}</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadApprovals() {
+    try {
+      const { users } = await CarChainAPI.Admin.getUsers({ role: 'garage', status: 'pending', limit: 50 });
+      const { users: inspectors } = await CarChainAPI.Admin.getUsers({ role: 'inspector', status: 'pending', limit: 50 });
+      const all = [...users, ...inspectors];
+
+      const tbody = document.getElementById('approvals-table-body');
+      if (!all.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">✅ No pending approvals</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = all.map(u => `
+        <tr>
+          <td><strong>${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</strong><br><span style="font-size:0.8rem;color:var(--color-text-muted)">${escapeHtml(u.email)}</span></td>
+          <td>${getRoleBadge(u.role)}</td>
+          <td>${u.businessName ? escapeHtml(u.businessName) : '—'}</td>
+          <td style="color:var(--color-text-muted)">${formatDate(u.createdAt)}</td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <button onclick="openModal('approve','${u._id}','${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}')" class="btn btn-sm" style="background:var(--color-success-bg);color:var(--color-success);border:1px solid rgba(34,197,94,0.3)">✅ Approve</button>
+              <button onclick="openModal('reject','${u._id}','${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}')" class="btn btn-sm" style="background:var(--color-danger-bg);color:var(--color-danger);border:1px solid rgba(239,68,68,0.3)">❌ Reject</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      Toast.error('Failed to load approvals: ' + err.message);
+    }
+  }
+
+  function openModal(action, userId, userName) {
+    modalAction = action;
+    modalUserId = userId;
+    document.getElementById('modal-title').textContent = action === 'approve' ? '✅ Approve Account' : '❌ Reject Account';
+    document.getElementById('modal-desc').textContent =
+      action === 'approve'
+        ? `You are about to approve the account for ${userName}. They will receive full ${getRoleBadge} access.`
+        : `You are about to reject the application from ${userName}.`;
+    document.getElementById('modal-desc').innerHTML =
+      action === 'approve'
+        ? `You are about to <strong>approve</strong> the account for <strong>${escapeHtml(userName)}</strong>.`
+        : `You are about to <strong>reject</strong> the application from <strong>${escapeHtml(userName)}</strong>.`;
+
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    confirmBtn.textContent = action === 'approve' ? 'Approve' : 'Reject';
+    confirmBtn.className = `btn ${action === 'approve' ? 'btn-primary' : 'btn-danger'}`;
+    confirmBtn.onclick = confirmModalAction;
+
+    document.getElementById('modal-note').value = '';
+    document.getElementById('action-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('action-modal').style.display = 'none';
+    modalAction = null; modalUserId = null;
+  }
+
+  async function confirmModalAction() {
+    const note = document.getElementById('modal-note').value.trim();
+    const btn = document.getElementById('modal-confirm-btn');
+    ButtonHelper.setLoading(btn, true);
+
+    try {
+      if (modalAction === 'approve') {
+        await CarChainAPI.Admin.approveUser(modalUserId, note);
+        Toast.success('Account approved successfully!');
+      } else {
+        await CarChainAPI.Admin.rejectUser(modalUserId, note);
+        Toast.warning('Account application rejected.');
+      }
+      closeModal();
+      await refreshStats();
+      loadApprovals();
+      loadUsers();
+    } catch (err) {
+      Toast.error('Action failed: ' + err.message);
+      ButtonHelper.setLoading(btn, false, 'Confirm');
+    }
+  }
+
+  async function toggleActive(userId, currentState) {
+    try {
+      const result = await CarChainAPI.Admin.toggleUserActive(userId);
+      Toast.success(result.message);
+      loadUsers();
+    } catch (err) {
+      Toast.error('Failed to toggle user status: ' + err.message);
+    }
+  }
+
+  function renderPagination(containerId, currentPage, totalPages, loadFn) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    let html = `<button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="${loadFn.name}(${currentPage - 1})">‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="${loadFn.name}(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 2) {
+        html += `<span class="page-btn" style="cursor:default">…</span>`;
+      }
+    }
+    html += `<button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="${loadFn.name}(${currentPage + 1})">›</button>`;
+    container.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(str || '')));
+    return div.innerHTML;
+  }
+
+  // Role filter change
+  document.getElementById('role-filter')?.addEventListener('change', () => loadUsers(1));
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+  });
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    document.getElementById('dashboard-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+</script>
+</body>
+</html>

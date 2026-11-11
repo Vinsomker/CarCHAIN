@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CarChain – Blockchain-Based Vehicle Marketplace</title>
+  <meta name="description" content="CarChain is a blockchain-based vehicle marketplace that fights fraud through transparent vehicle history and digital passports." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+<!-- ── Toast Container ─────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Navbar ─────────────────────────────────────────────────────────────── -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">⛓</div>
+      Car<span class="brand-chain">Chain</span>
+    </a>
+
+    <ul class="navbar-nav" id="main-nav">
+      <li><a href="index.html" class="nav-link active">Home</a></li>
+      <li><a href="pages/marketplace.html" class="nav-link">Marketplace</a></li>
+      <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+      <li><a href="#features" class="nav-link">Features</a></li>
+    </ul>
+
+    <div class="navbar-actions" id="navbar-actions">
+      <a href="pages/login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="pages/register.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+
+    <button class="navbar-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero Section ─────────────────────────────────────────────────────────── -->
+<main>
+  <section class="hero" aria-label="Hero">
+    <div class="hero-bg">
+      <div class="hero-bg-gradient"></div>
+      <div class="hero-grid-pattern"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-text animate-fadeInUp">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          Blockchain-Powered Vehicle History
+        </div>
+
+        <h1 class="hero-title">
+          Buy & Sell Cars<br/>
+          with <span class="highlight">Complete Trust</span>
+        </h1>
+
+        <p class="hero-description">
+          CarChain uses blockchain technology to create tamper-proof digital passports for every vehicle.
+          Know a car's true history — odometer readings, maintenance records, accidents and ownership — before you buy.
+        </p>
+
+        <div class="hero-actions">
+          <a href="pages/marketplace.html" class="btn btn-primary btn-lg">
+            🔍 Browse Vehicles
+          </a>
+          <a href="pages/register.html" class="btn btn-secondary btn-lg">
+            List Your Car
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-value" id="hero-stat-listings">5</span>
+            <span class="stat-label">Vehicles Listed</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="hero-stat-passports">5</span>
+            <span class="stat-label">Digital Passports</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="hero-stat-garages">1</span>
+            <span class="stat-label">Verified Garages</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-card-preview">
+          <div class="car-image">🚗</div>
+          <div class="car-info">
+            <div>
+              <div style="font-size:1rem; font-weight:700; color:var(--color-text-primary)">2022 BMW 3 Series</div>
+              <div style="font-size:0.8rem; color:var(--color-text-muted); margin-top:2px">M340i xDrive · 328i</div>
+            </div>
+            <div class="vehicle-card-specs">
+              <span class="spec-item"><span class="spec-icon">📅</span> 2022</span>
+              <span class="spec-item"><span class="spec-icon">📏</span> 28,400 km</span>
+              <span class="spec-item"><span class="spec-icon">⚡</span> Gasoline</span>
+            </div>
+            <div class="passport-verified">
+              <span class="check-icon">✅</span>
+              <span>Digital Passport Verified</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="vehicle-price">$42,500</div>
+              <button class="btn btn-primary btn-sm">View Passport</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Vehicle Search ─────────────────────────────────────────────────────── -->
+  <section class="search-section" aria-label="Vehicle search">
+    <div class="container">
+      <form class="search-box" id="search-form">
+        <div class="search-field">
+          <label for="search-make">Make / Model</label>
+          <input type="text" id="search-make" name="q" placeholder="e.g. BMW, Toyota..." />
+        </div>
+        <div class="search-field">
+          <label for="search-type">Vehicle Type</label>
+          <select id="search-type" name="bodyType">
+            <option value="">All Types</option>
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="hatchback">Hatchback</option>
+            <option value="coupe">Coupe</option>
+            <option value="pickup">Pickup</option>
+            <option value="van">Van</option>
+          </select>
+        </div>
+        <div class="search-field">
+          <label for="search-price">Max Price</label>
+          <select id="search-price" name="maxPrice">
+            <option value="">Any Price</option>
+            <option value="10000">Under $10,000</option>
+            <option value="20000">Under $20,000</option>
+            <option value="30000">Under $30,000</option>
+            <option value="50000">Under $50,000</option>
+            <option value="100000">Under $100,000</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── Featured Vehicles ─────────────────────────────────────────────────── -->
+  <section class="featured-section section" id="featured" aria-label="Featured vehicles">
+    <div class="container">
+      <div class="section-top">
+        <div>
+          <span class="section-label">Marketplace</span>
+          <h2>Featured Vehicles</h2>
+        </div>
+        <a href="pages/marketplace.html" class="btn btn-secondary btn-sm">View All →</a>
+      </div>
+
+      <div class="vehicles-grid" id="featured-vehicles">
+        <!-- Demo cards – will be replaced by real API data once vehicles are added -->
+        <div class="vehicle-card" onclick="window.location.href='pages/marketplace.html'">
+          <div class="vehicle-card-image">
+            🚗
+            <div class="vehicle-card-badges">
+              <span class="badge badge-accent">New</span>
+            </div>
+          </div>
+          <div class="vehicle-card-body">
+            <div>
+              <div class="vehicle-card-title">Be the first to list!</div>
+              <div class="vehicle-card-subtitle">Register as a seller and add your vehicle</div>
+            </div>
+            <div class="vehicle-card-footer">
+              <span class="vehicle-price">—</span>
+              <a href="pages/register.html" class="btn btn-outline btn-sm">Get Started</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ──────────────────────────────────────────────────────── -->
+  <section class="how-it-works section" id="how-it-works" aria-label="How CarChain works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Process</span>
+        <h2>How CarChain Works</h2>
+        <p style="max-width:580px; margin:var(--space-md) auto 0; font-size:1rem;">
+          From vehicle registration to secure purchase — every step is transparent and verifiable.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-icon">🚘</div>
+          <h3>Register Vehicle</h3>
+          <p>Sellers register their vehicle and create its digital passport with VIN, specs and photos.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-icon">🔧</div>
+          <h3>Certified Records</h3>
+          <p>Approved garages and inspectors add verified maintenance records and inspection certificates.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-icon">🔍</div>
+          <h3>Buyer Verifies</h3>
+          <p>Buyers inspect the full vehicle history — mileage, accidents, ownership and service records.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-icon">🔐</div>
+          <h3>Secure Purchase</h3>
+          <p>Funds are locked in a smart contract escrow and released only when all transfer conditions are met.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ──────────────────────────────────────────────────────────── -->
+  <section class="features-section section" id="features" aria-label="Platform features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Why CarChain</span>
+        <h2>Built for Trust and Transparency</h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Tamper-Proof History</h3>
+          <p>Vehicle records are stored with cryptographic integrity. No one can silently alter odometer readings or erase accident history.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <h3>Certified Professionals</h3>
+          <p>Only administrator-approved garages and inspectors can add verified records. Fake histories are impossible.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔐</div>
+          <h3>Escrow Protection</h3>
+          <p>Smart contract escrow ensures your payment is only released to the seller after all ownership transfer conditions are confirmed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Digital Passport</h3>
+          <p>Every vehicle has a comprehensive digital passport — full maintenance timeline, inspection certificates and complete ownership chain.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>Blockchain Anchored</h3>
+          <p>Critical records are anchored to the Ethereum blockchain, providing an immutable public audit trail accessible to anyone.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👛</div>
+          <h3>Web3 Ready</h3>
+          <p>Connect your MetaMask wallet for seamless blockchain transactions. Full Web3 integration coming soon.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA Section ────────────────────────────────────────────────────────── -->
+  <section class="cta-section section" aria-label="Call to action">
+    <div class="container">
+      <div class="cta-content">
+        <span class="section-label">Join CarChain</span>
+        <h2>Ready to Buy or Sell with Confidence?</h2>
+        <p>Join CarChain and experience vehicle transactions the way they should be — transparent, secure and fraud-free.</p>
+        <div class="cta-actions">
+          <a href="pages/register.html" class="btn btn-primary btn-lg">Create Free Account</a>
+          <a href="pages/marketplace.html" class="btn btn-secondary btn-lg">Browse Vehicles</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="navbar-brand">
+          <div class="brand-icon">⛓</div>
+          Car<span class="brand-chain">Chain</span>
+        </a>
+        <p>A blockchain-based vehicle marketplace built to eliminate fraud and restore trust in the automotive industry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="pages/marketplace.html">Marketplace</a></li>
+          <li><a href="pages/register.html">Sell Your Car</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="pages/register.html">Register</a></li>
+          <li><a href="pages/login.html">Sign In</a></li>
+          <li><a href="pages/dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech</h4>
+        <ul>
+          <li><a href="#features">Blockchain</a></li>
+          <li><a href="#features">Smart Contracts</a></li>
+          <li><a href="#features">MetaMask</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2024 CarChain. All rights reserved.</span>
+      <span>Built with Node.js · MongoDB · Ethereum (coming soon)</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // Load featured listings from API
+  async function loadFeatured() {
+    try {
+      const response = await CarChainAPI.Listings.getAll({ limit: 3 });
+      const listings = response.listings;
+      if (listings && listings.length > 0) {
+        document.getElementById('hero-stat-listings').textContent = response.total || listings.length;
+        document.getElementById('hero-stat-passports').textContent = response.total || listings.length;
+
+        const grid = document.getElementById('featured-vehicles');
+        grid.innerHTML = listings.map(l => {
+          const v = l.vehicle;
+          if (!v) return '';
+          const imgUrl = (v.images && v.images[0]?.url) || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80';
+          const isVerified = v.passportStatus === 'verified';
+
+          return `
+            <div class="vehicle-card" onclick="window.location.href='pages/vehicle-details.html?id=${l._id}'">
+              <div class="vehicle-card-image" style="background:#111827; overflow:hidden">
+                <img src="${imgUrl}" alt="${v.displayName}" style="width:100%;height:100%;object-fit:cover" />
+                <div class="vehicle-card-badges">
+                  <span class="badge ${isVerified ? 'badge-success' : 'badge-accent'}">
+                    ${isVerified ? '🛡️ Verified Passport' : '📋 Digital Passport'}
+                  </span>
+                </div>
+              </div>
+              <div class="vehicle-card-body">
+                <div>
+                  <div class="vehicle-card-title">${v.year} ${v.make} ${v.model}</div>
+                  <div class="vehicle-card-subtitle">${v.variant || v.bodyType.toUpperCase()}</div>
+                </div>
+                <div class="vehicle-card-specs">
+                  <span class="spec-item"><span class="spec-icon">📅</span> ${v.year}</span>
+                  <span class="spec-item"><span class="spec-icon">📏</span> ${v.currentMileage.toLocaleString()} ${v.mileageUnit}</span>
+                  <span class="spec-item"><span class="spec-icon">⚡</span> ${v.fuelType.toUpperCase()}</span>
+                </div>
+                <div class="vehicle-card-footer" onclick="event.stopPropagation()">
+                  <span class="vehicle-price">${formatCurrency(l.price, l.currency)}</span>
+                  <div style="display:flex;gap:6px">
+                    <a href="pages/passport.html?id=${v._id}" class="btn btn-outline btn-sm">🛡️ Passport</a>
+                    <a href="pages/vehicle-details.html?id=${l._id}" class="btn btn-primary btn-sm">Details →</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (_) {
+      // Keep static fallback
+    }
+  }
+
+  // Handle search form
+  document.getElementById('search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = FormHelper.serialize(e.target);
+    const params = new URLSearchParams();
+    if (data.q) params.set('q', data.q);
+    if (data.bodyType) params.set('bodyType', data.bodyType);
+    if (data.maxPrice) params.set('maxPrice', data.maxPrice);
+    window.location.href = `pages/marketplace.html?${params.toString()}`;
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadFeatured();
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  });
+</script>
+</body>
+</html>

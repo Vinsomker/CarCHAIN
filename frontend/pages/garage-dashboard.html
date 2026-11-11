@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garage Dashboard – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div style="display:flex;align-items:center;gap:var(--space-md);">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      <a href="../index.html" class="navbar-brand">
+        <div class="brand-icon">⛓</div>
+        Car<span class="brand-chain">Chain</span>
+        <span class="badge badge-success" style="margin-left:4px; font-size:0.65rem;">Certified Garage</span>
+      </a>
+    </div>
+    <div class="navbar-actions">
+      <a href="marketplace.html" class="btn btn-secondary btn-sm">Marketplace</a>
+      <button onclick="logout()" class="btn btn-primary btn-sm">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Dashboard Layout ───────────────────────────────────────────────────── -->
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" id="dashboard-sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar" style="background:#059669">G</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Garage</div>
+        <div class="sidebar-user-role" id="sidebar-business">Certified Service</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Garage Portal</span>
+      <a href="#overview" class="sidebar-link active" onclick="showTab('overview')">
+        <span class="sidebar-link-icon">🏠</span> Overview
+      </a>
+      <a href="#records" class="sidebar-link" onclick="showTab('records')">
+        <span class="sidebar-link-icon">🔧</span> Maintenance Log
+      </a>
+      <a href="javascript:void(0)" class="sidebar-link" onclick="openAddRecordModal()">
+        <span class="sidebar-link-icon">➕</span> Log Service Record
+      </a>
+      <a href="marketplace.html" class="sidebar-link">
+        <span class="sidebar-link-icon">🚗</span> Browse Marketplace
+      </a>
+      <a href="#profile" class="sidebar-link" onclick="showTab('profile')">
+        <span class="sidebar-link-icon">👤</span> Business Profile
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button onclick="logout()" class="btn btn-secondary btn-sm btn-full">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <div class="dashboard-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Garage Dashboard</h1>
+          <p>Submit and verify vehicle maintenance records anchored to digital passports</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary btn-sm" id="btn-add-record" onclick="openAddRecordModal()">+ Log Maintenance Record</button>
+        </div>
+      </div>
+
+      <!-- Pending Approval Alert -->
+      <div id="approval-notice" style="display:none" class="alert alert-warning">
+        ⏳ <strong>Account Pending Review:</strong> Your garage account is awaiting administrator review.
+        Once approved, you will be authorized to submit tamper-proof maintenance records to vehicle passports.
+      </div>
+
+      <!-- Approved Banner -->
+      <div id="approved-banner" style="display:none" class="alert alert-success">
+        ✅ <strong>Certified Partner:</strong> Your garage is verified. All service records you log are permanently recorded on CarChain digital passports.
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Services Logged</span>
+            <div class="stat-card-icon green">🔧</div>
+          </div>
+          <div class="stat-card-value" id="stat-total-services">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Vehicles Serviced</span>
+            <div class="stat-card-icon blue">🚗</div>
+          </div>
+          <div class="stat-card-value" id="stat-unique-vehicles">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Total Service Value</span>
+            <div class="stat-card-icon yellow">💰</div>
+          </div>
+          <div class="stat-card-value" id="stat-total-value">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Certification Status</span>
+            <div class="stat-card-icon green">🛡️</div>
+          </div>
+          <div class="stat-card-value" id="stat-status" style="font-size:1.15rem; margin-top:6px">—</div>
+        </div>
+      </div>
+
+      <!-- Records Table -->
+      <div class="data-table-wrapper" id="records">
+        <div class="data-table-header">
+          <h3 class="data-table-title">Certified Maintenance Log</h3>
+          <button class="btn btn-primary btn-sm" onclick="openAddRecordModal()">+ New Service Record</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle / VIN</th>
+                <th>Service Type</th>
+                <th>Odometer Reading</th>
+                <th>Service Date</th>
+                <th>Total Cost</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="records-table-body">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:var(--space-xl);color:var(--color-text-muted)">Loading maintenance records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Business Profile -->
+      <div class="card" style="margin-top:var(--space-xl)" id="profile">
+        <h3 style="margin-bottom:var(--space-lg)">Garage Certification Profile</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Contact Person</div>
+            <div class="info-value" id="profile-name">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Business Name</div>
+            <div class="info-value" id="profile-business">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">License Number</div>
+            <div class="info-value" id="profile-license">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email</div>
+            <div class="info-value" id="profile-email">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Approval Status</div>
+            <div class="info-value" id="profile-status">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ── Modal: Log Maintenance Record ──────────────────────────────────────── -->
+<div id="add-record-modal" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; overflow-y:auto; padding:var(--space-md)">
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)" onclick="closeAddRecordModal()"></div>
+  <div class="card" style="position:relative;z-index:1;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg)">
+      <h3 style="display:flex;align-items:center;gap:8px">🔧 Log Certified Maintenance Record</h3>
+      <button onclick="closeAddRecordModal()" style="background:none;border:none;font-size:1.3rem;color:var(--color-text-muted);cursor:pointer">✕</button>
+    </div>
+
+    <form id="maintenance-form" onsubmit="handleCreateRecord(event)">
+      <!-- VIN lookup / picker -->
+      <div class="form-group">
+        <label class="form-label">Vehicle Identification Number (VIN) <span class="required">*</span></label>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="m-vin-input" class="form-control" placeholder="Enter 17-char VIN (e.g. WBA33AY08NFP28914)" maxlength="17" required style="font-family:var(--font-mono); text-transform:uppercase" />
+          <button type="button" onclick="lookupVehicleForService()" class="btn btn-secondary btn-sm" style="flex-shrink:0">🔍 Verify VIN</button>
+        </div>
+        <div id="m-vehicle-preview" style="display:none; margin-top:8px; padding:10px 14px; background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-md); font-size:0.875rem">
+          <!-- Populated by JS -->
+        </div>
+        <input type="hidden" name="vehicleId" id="m-vehicle-id" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service Type <span class="required">*</span></label>
+          <select name="serviceType" class="form-control" required>
+            <option value="oil_change">Oil &amp; Filter Change</option>
+            <option value="brake_service">Brake Service (Pads/Rotors)</option>
+            <option value="tire_change">Tire Replacement &amp; Balancing</option>
+            <option value="engine_repair">Engine Service / Diagnostics</option>
+            <option value="transmission_service">Transmission Fluid &amp; Filter</option>
+            <option value="electrical">Battery &amp; Electrical System</option>
+            <option value="bodywork">Bodywork / Dent Repair</option>
+            <option value="ac_service">Air Conditioning Service</option>
+            <option value="general_service">Scheduled Milestone Inspection</option>
+            <option value="recall_fix">Manufacturer Recall Repair</option>
+            <option value="other">Other Service</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Date <span class="required">*</span></label>
+          <input type="date" name="serviceDate" id="m-service-date" class="form-control" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">
+            Odometer Reading (km) <span class="required">*</span>
+          </label>
+          <input type="number" name="mileageAtService" id="m-mileage-input" class="form-control" placeholder="Current km" min="0" required />
+          <div class="form-hint" id="m-mileage-hint" style="color:var(--color-text-muted)">
+            Enter current odometer. Anti-tamper check enforces new mileage &gt;= last reading.
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Cost ($ USD)</label>
+          <input type="number" name="totalCost" class="form-control" placeholder="e.g. 350" min="0" step="10" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Service Description &amp; Findings <span class="required">*</span></label>
+        <textarea name="description" class="form-control" rows="3" placeholder="Describe the diagnostics, work completed, fluids used, and overall vehicle condition..." required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Parts Replaced (comma-separated)</label>
+          <input type="text" name="partsSummary" class="form-control" placeholder="e.g. OEM Oil Filter, Motul 0W-30 Synthetic, Cabin Filter" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Certified Technician Name</label>
+          <input type="text" name="technicianName" class="form-control" placeholder="e.g. Dave Reynolds, ASE Master Tech" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-lg)">
+        <button type="button" onclick="closeAddRecordModal()" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-record">Certify &amp; Write to Passport</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  let myRecords = [];
+  let selectedVehicleCurrentMileage = 0;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!requireAuth(['garage', 'admin'])) return;
+
+    const user = CarChainAPI.SessionManager.getUser();
+    if (user) {
+      document.getElementById('sidebar-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('sidebar-avatar').textContent = getInitials(user.firstName, user.lastName);
+      document.getElementById('sidebar-business').textContent = user.businessName || 'Certified Garage';
+      document.getElementById('profile-name').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('profile-business').textContent = user.businessName || 'Not specified';
+      document.getElementById('profile-license').textContent = user.businessLicense || 'Licensed Service Facility';
+      document.getElementById('profile-email').textContent = user.email;
+
+      const isApproved = user.approvalStatus === 'approved';
+      document.getElementById('stat-status').innerHTML = getStatusBadge(user.approvalStatus || 'pending');
+      document.getElementById('profile-status').innerHTML = getStatusBadge(user.approvalStatus || 'pending');
+
+      if (isApproved) {
+        document.getElementById('approved-banner').style.display = 'flex';
+      } else {
+        document.getElementById('approval-notice').style.display = 'flex';
+        document.getElementById('btn-add-record').disabled = true;
+      }
+    }
+
+    // Default today's date
+    document.getElementById('m-service-date').value = new Date().toISOString().split('T')[0];
+
+    await refreshDashboard();
+  });
+
+  async function refreshDashboard() {
+    try {
+      const response = await CarChainAPI.Maintenance.getMyRecords();
+      myRecords = response.records || [];
+
+      // Calculate stats
+      const totalServices = myRecords.length;
+      const uniqueVehicles = new Set(myRecords.map(r => r.vehicle?._id).filter(Boolean)).size;
+      const totalValue = myRecords.reduce((sum, r) => sum + (r.totalCost || 0), 0);
+
+      document.getElementById('stat-total-services').textContent = totalServices;
+      document.getElementById('stat-unique-vehicles').textContent = uniqueVehicles;
+      document.getElementById('stat-total-value').textContent = formatCurrency(totalValue);
+
+      renderRecordsTable(myRecords);
+    } catch (err) {
+      Toast.error('Failed to load maintenance records: ' + err.message);
+    }
+  }
+
+  function renderRecordsTable(records) {
+    const tbody = document.getElementById('records-table-body');
+    if (!records || records.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="table-empty">
+            <div class="table-empty-icon">🔧</div>
+            <p>No certified maintenance records logged yet.</p>
+            <button onclick="openAddRecordModal()" class="btn btn-primary btn-sm" style="margin-top:var(--space-md)">+ Log Your First Service</button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = records.map(r => {
+      const v = r.vehicle;
+      const vehicleName = v ? `${v.year} ${v.make} ${v.model}` : 'Unknown Vehicle';
+      const vin = v?.vin || '—';
+
+      return `
+        <tr>
+          <td>
+            <strong>${vehicleName}</strong>
+            <div class="text-xs text-accent" style="font-family:var(--font-mono)">${vin}</div>
+          </td>
+          <td>
+            <span class="badge badge-accent">${r.serviceType.replace('_', ' ').toUpperCase()}</span>
+          </td>
+          <td><strong>${r.mileageAtService.toLocaleString()} km</strong></td>
+          <td class="text-muted">${formatDate(r.serviceDate)}</td>
+          <td>${r.totalCost ? formatCurrency(r.totalCost, r.currency) : '—'}</td>
+          <td><span class="badge badge-success">🛡️ Certified</span></td>
+          <td>
+            ${v ? `<a href="passport.html?id=${v._id}" class="btn btn-outline btn-sm">🛡️ Passport</a>` : '—'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openAddRecordModal() {
+    const user = CarChainAPI.SessionManager.getUser();
+    if (user.approvalStatus !== 'approved' && user.role !== 'admin') {
+      Toast.error('Your garage account is pending administrator approval before you can log records.');
+      return;
+    }
+    document.getElementById('maintenance-form').reset();
+    document.getElementById('m-service-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('m-vehicle-preview').style.display = 'none';
+    document.getElementById('m-vehicle-id').value = '';
+    selectedVehicleCurrentMileage = 0;
+    document.getElementById('add-record-modal').style.display = 'flex';
+  }
+
+  function closeAddRecordModal() {
+    document.getElementById('add-record-modal').style.display = 'none';
+  }
+
+  async function lookupVehicleForService() {
+    const vin = document.getElementById('m-vin-input').value.trim().toUpperCase();
+    if (!vin || vin.length !== 17) {
+      Toast.error('Please enter a valid 17-character VIN.');
+      return;
+    }
+
+    try {
+      const response = await CarChainAPI.Vehicles.getByVin(vin);
+      const vehicle = response.passport.vehicle;
+
+      document.getElementById('m-vehicle-id').value = vehicle._id;
+      selectedVehicleCurrentMileage = vehicle.currentMileage;
+
+      const previewEl = document.getElementById('m-vehicle-preview');
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = `
+        <div style="color:var(--color-success); font-weight:700">✅ Vehicle Verified on CarChain</div>
+        <div style="margin-top:2px"><strong>${vehicle.year} ${vehicle.make} ${vehicle.model}</strong> (${vehicle.bodyType.toUpperCase()})</div>
+        <div style="color:var(--color-text-muted); font-size:0.8rem; margin-top:2px">
+          Last certified odometer: <strong style="color:var(--color-text-primary)">${vehicle.currentMileage.toLocaleString()} ${vehicle.mileageUnit}</strong>
+        </div>
+      `;
+
+      // Suggest minimum mileage
+      document.getElementById('m-mileage-input').min = vehicle.currentMileage;
+      document.getElementById('m-mileage-input').placeholder = `Min: ${vehicle.currentMileage}`;
+      document.getElementById('m-mileage-hint').innerHTML = `Last recorded odometer: <strong>${vehicle.currentMileage.toLocaleString()} km</strong>. Cannot enter lower!`;
+
+      Toast.success('Vehicle located! Digital passport loaded.');
+    } catch (err) {
+      document.getElementById('m-vehicle-preview').style.display = 'none';
+      document.getElementById('m-vehicle-id').value = '';
+      Toast.error('Vehicle lookup failed: ' + err.message);
+    }
+  }
+
+  async function handleCreateRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('btn-submit-record');
+
+    const vehicleId = document.getElementById('m-vehicle-id').value;
+    if (!vehicleId) {
+      Toast.error('Please verify the vehicle VIN first.');
+      return;
+    }
+
+    const data = FormHelper.serialize(form);
+    const mileage = Number(data.mileageAtService);
+
+    // Anti-rollback client check
+    if (mileage < selectedVehicleCurrentMileage) {
+      Toast.error(`Fraud prevention: Mileage (${mileage.toLocaleString()}) cannot be lower than last recorded reading (${selectedVehicleCurrentMileage.toLocaleString()}).`);
+      return;
+    }
+
+    ButtonHelper.setLoading(btn, true);
+
+    const partsReplaced = data.partsSummary
+      ? data.partsSummary.split(',').map(p => ({ partName: p.trim() }))
+      : [];
+
+    const payload = {
+      vehicleId,
+      serviceType: data.serviceType,
+      serviceDate: data.serviceDate,
+      mileageAtService: mileage,
+      description: data.description,
+      totalCost: data.totalCost ? Number(data.totalCost) : undefined,
+      partsReplaced,
+      technicianName: data.technicianName,
+    };
+
+    try {
+      await CarChainAPI.Maintenance.create(payload);
+      Toast.success('Maintenance certified and recorded on vehicle digital passport!');
+      closeAddRecordModal();
+      await refreshDashboard();
+    } catch (err) {
+      Toast.error('Service logging failed: ' + err.message);
+    } finally {
+      ButtonHelper.setLoading(btn, false, 'Certify & Write to Passport');
+    }
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    event.currentTarget?.classList.add('active');
+  }
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+  });
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    document.getElementById('dashboard-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+</script>
+</body>
+</html>

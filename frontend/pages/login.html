@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – CarChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- Mobile Nav (shown on small screens) -->
+<nav class="auth-mobile-nav">
+  <a href="../index.html" class="auth-logo">
+    <div class="brand-icon">⛓</div>
+    Car<span style="color:var(--color-accent)">Chain</span>
+  </a>
+</nav>
+
+<div class="auth-page">
+
+  <!-- ── Left Visual Panel ─────────────────────────────────────────────────── -->
+  <div class="auth-visual">
+    <a href="../index.html" class="auth-logo">
+      <div class="brand-icon">⛓</div>
+      Car<span style="color:var(--color-accent)">Chain</span>
+    </a>
+
+    <div class="auth-visual-content">
+      <h2 class="auth-visual-title">The Secure Way to Buy and Sell Cars</h2>
+      <p class="auth-visual-desc">
+        CarChain provides complete vehicle transparency through blockchain-secured digital passports.
+        No more odometer fraud. No more hidden histories.
+      </p>
+
+      <div class="auth-visual-features">
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">🛡️</div>
+          <div class="auth-feature-text">
+            <h4>Tamper-Proof Records</h4>
+            <p>Every maintenance record and inspection is cryptographically verified</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">🔐</div>
+          <div class="auth-feature-text">
+            <h4>Escrow Protection</h4>
+            <p>Smart contract escrow ensures safe payments for both buyers and sellers</p>
+          </div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon">📋</div>
+          <div class="auth-feature-text">
+            <h4>Digital Vehicle Passport</h4>
+            <p>Full history timeline — ownership, maintenance, accidents and inspections</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-visual-footer">
+      © 2024 CarChain — Building trust in automotive transactions
+    </div>
+  </div>
+
+  <!-- ── Right Form Panel ───────────────────────────────────────────────────── -->
+  <div class="auth-form-panel">
+    <div class="auth-form-container">
+      <div class="auth-form-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to your CarChain account</p>
+      </div>
+
+      <!-- Server connection status -->
+      <div id="server-status" style="display:none;" class="alert alert-warning" role="alert">
+        ⚠️ Cannot connect to server. Make sure the backend is running on port 5000.
+      </div>
+
+      <form id="login-form" action="javascript:void(0);" method="POST" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address <span class="required">*</span></label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="form-control"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          />
+          <div class="form-error" id="email-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">
+            Password <span class="required">*</span>
+            <a href="#" style="font-weight:400; float:right; font-size:0.8rem;" tabindex="-1">Forgot password?</a>
+          </label>
+          <div class="input-with-action">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-control"
+              placeholder="Your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="input-action-btn" id="toggle-password" aria-label="Toggle password visibility">
+              👁
+            </button>
+          </div>
+          <div class="form-error" id="password-error"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="login-btn">
+          Sign In
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        Don't have an account? <a href="register.html">Create one for free</a>
+      </div>
+
+      <div class="divider-text">or</div>
+
+      <div style="text-align:center; padding:var(--space-md); background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-md);">
+        <p style="font-size:0.8rem; color:var(--color-text-muted); margin-bottom:var(--space-sm);">🦊 MetaMask Sign-In</p>
+        <p style="font-size:0.75rem; color:var(--color-text-muted);">Web3 wallet login coming in a future phase</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  // ── Redirect if already logged in ────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const { SessionManager } = CarChainAPI;
+    if (SessionManager.isLoggedIn()) {
+      const role = SessionManager.getRole();
+      window.location.href = getDashboardUrl(role);
+      return;
+    }
+
+    // Check server connectivity
+    checkServer();
+
+    // Check for redirect param
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered') === '1') {
+      Toast.success('Account created! Please sign in.');
+    }
+  });
+
+  async function checkServer() {
+    try {
+      await CarChainAPI.Health.check();
+    } catch (err) {
+      document.getElementById('server-status').style.display = 'flex';
+    }
+  }
+
+  // ── Password visibility toggle ────────────────────────────────────────────
+  document.getElementById('toggle-password').addEventListener('click', function () {
+    const input = document.getElementById('password');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    this.textContent = isHidden ? '🙈' : '👁';
+  });
+
+  // ── Form Submission ───────────────────────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('login-btn');
+
+    FormHelper.clearErrors(form);
+
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    // Basic client-side validation
+    let hasError = false;
+    if (!email) {
+      FormHelper.setFieldError(form.email, 'Email is required');
+      hasError = true;
+    }
+    if (!password) {
+      FormHelper.setFieldError(form.password, 'Password is required');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    ButtonHelper.setLoading(btn, true);
+
+    try {
+      const result = await CarChainAPI.Auth.login({ email, password });
+
+      // Store token and user
+      CarChainAPI.TokenManager.set(result.token);
+      CarChainAPI.SessionManager.setUser(result.user);
+
+      Toast.success(result.message || 'Sign in successful!');
+
+      // Redirect based on role
+      setTimeout(() => {
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        window.location.href = redirectUrl || getDashboardUrl(result.user.role);
+      }, 800);
+
+    } catch (err) {
+      ButtonHelper.setLoading(btn, false, 'Sign In');
+
+      if (err.data?.errors) {
+        FormHelper.showErrors(err.data.errors, form);
+      } else {
+        Toast.error(err.message || 'Sign in failed. Please check your credentials.');
+      }
+    }
+  });
+</script>
+</body>
+</html>
